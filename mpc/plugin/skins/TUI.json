@@ -3011,7 +3011,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 89 90"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -3038,7 +3038,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 89 90"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
@@ -3113,7 +3113,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 89 90"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -3140,7 +3140,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 89 90"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
@@ -3215,7 +3215,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 90"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -3242,7 +3242,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 90"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
@@ -3317,7 +3317,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 89 90"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -3344,7 +3344,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 89 90"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
@@ -3419,7 +3419,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 89 90"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -3446,7 +3446,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 89 90"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
@@ -3521,7 +3521,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 89 90"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -3548,7 +3548,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 89 90"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
@@ -3623,7 +3623,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 90"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -3650,14 +3650,14 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 90"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
           }
         },
         {
-          "key": "filter knob 15 freq",
+          "key": "filter knob 13 freq",
           "value": {
             "version": 2,
             "actions": [
@@ -3708,7 +3708,7 @@
                   "data": {
                     "version": 3,
                     "knobType": "FilmStrip",
-                    "filmStrip": "filter_015_freq_knob.png",
+                    "filmStrip": "filter_013_freq_knob.png",
                     "numFrames": 128,
                     "invert": false,
                     "dragOrientation": "Vertical",
@@ -3725,7 +3725,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 119 118"
+                  "bounds": "0 0 124 124"
                 }
               },
               {
@@ -3752,7 +3752,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 119 118"
+                  "bounds": "0 0 124 124"
                 }
               }
             ]
@@ -3827,7 +3827,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 89 89"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -3854,7 +3854,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 89 89"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
@@ -3929,7 +3929,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 89"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -3956,7 +3956,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 89"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
@@ -4031,7 +4031,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 89"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -4058,7 +4058,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 89"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
@@ -4133,7 +4133,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 89 90"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -4160,7 +4160,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 89 90"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
@@ -4235,7 +4235,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 90"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -4262,7 +4262,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 90"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
@@ -4337,7 +4337,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 90"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -4364,7 +4364,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 90"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
@@ -4439,7 +4439,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 90"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -4466,7 +4466,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 90"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
@@ -4541,7 +4541,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 89"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -4568,7 +4568,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 89"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
@@ -4643,7 +4643,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 89"
+                  "bounds": "0 0 94 94"
                 }
               },
               {
@@ -4670,7 +4670,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 90 89"
+                  "bounds": "0 0 94 94"
                 }
               }
             ]
@@ -30943,7 +30943,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "209 41 89 90"
+                "bounds": "70 65 94 94"
               }
             },
             {
@@ -30972,7 +30972,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "339 41 89 90"
+                "bounds": "275 65 94 94"
               }
             },
             {
@@ -31001,7 +31001,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "466 41 90 90"
+                "bounds": "480 65 94 94"
               }
             },
             {
@@ -31030,7 +31030,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "209 221 89 90",
+                "bounds": "70 215 94 94",
                 "additionalInvalidatingHandles": ["IndexedEnabling/0/2/Parameter 65"]
               }
             },
@@ -31060,7 +31060,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "209 221 89 90",
+                "bounds": "70 215 94 94",
                 "additionalInvalidatingHandles": ["IndexedEnabling/1/2/Parameter 65"]
               }
             },
@@ -31090,7 +31090,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "339 221 89 90"
+                "bounds": "275 215 94 94"
               }
             },
             {
@@ -31119,7 +31119,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "466 221 90 90"
+                "bounds": "480 215 94 94"
               }
             },
             {
@@ -31148,7 +31148,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "208 337 35 23"
+                "bounds": "47 360 36 24"
               }
             },
             {
@@ -31177,7 +31177,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "208 363 35 23"
+                "bounds": "47 390 36 24"
               }
             },
             {
@@ -31206,7 +31206,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "219 398 69 34",
+                "bounds": "81 452 72 36",
                 "additionalInvalidatingHandles": ["IndexedEnabling/0/2/Parameter 65"]
               }
             },
@@ -31236,7 +31236,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "219 398 69 34",
+                "bounds": "81 452 72 36",
                 "additionalInvalidatingHandles": ["IndexedEnabling/1/2/Parameter 65"]
               }
             },
@@ -31244,126 +31244,8 @@
               "version": 2,
               "componentData": {
                 "version": 1,
-                "name": "slope",
-                "type": "Button",
-                "data": {
-                  "version": 2,
-                  "onImage": "filter_013_slope_led0_on.png",
-                  "offImage": "filter_013_slope_led0_off.png",
-                  "buttonId": 0,
-                  "numButtonsInGroup": 2,
-                  "handleName": "Parameter 64",
-                  "gestureBehaviour": "Instant"
-                }
-              },
-              "handle remapping": {
-                "version": 1,
-                "map": []
-              },
-              "bounds": {
-                "version": 1,
-                "acceptsHWFocus": "No",
-                "showWhenDataModelInvalid": "Hide",
-                "whenVisible": "Always",
-                "boundsType": "Absolute",
-                "bounds": "208 465 35 23"
-              }
-            },
-            {
-              "version": 2,
-              "componentData": {
-                "version": 1,
-                "name": "slope",
-                "type": "Button",
-                "data": {
-                  "version": 2,
-                  "onImage": "filter_013_slope_led1_on.png",
-                  "offImage": "filter_013_slope_led1_off.png",
-                  "buttonId": 1,
-                  "numButtonsInGroup": 2,
-                  "handleName": "Parameter 64",
-                  "gestureBehaviour": "Instant"
-                }
-              },
-              "handle remapping": {
-                "version": 1,
-                "map": []
-              },
-              "bounds": {
-                "version": 1,
-                "acceptsHWFocus": "No",
-                "showWhenDataModelInvalid": "Hide",
-                "whenVisible": "Always",
-                "boundsType": "Absolute",
-                "bounds": "208 491 35 23"
-              }
-            },
-            {
-              "version": 2,
-              "componentData": {
-                "version": 1,
-                "name": "slope",
-                "type": "Button",
-                "data": {
-                  "version": 2,
-                  "onImage": "filter_014_slope_off.png",
-                  "offImage": "filter_014_slope_off.png",
-                  "buttonId": 1,
-                  "numButtonsInGroup": 2,
-                  "handleName": "Parameter 64",
-                  "gestureBehaviour": "Instant"
-                }
-              },
-              "handle remapping": {
-                "version": 1,
-                "map": []
-              },
-              "bounds": {
-                "version": 2,
-                "acceptsHWFocus": "No",
-                "showWhenDataModelInvalid": "Hide",
-                "whenVisible": "Always",
-                "boundsType": "Absolute",
-                "bounds": "219 514 69 34",
-                "additionalInvalidatingHandles": ["IndexedEnabling/0/2/Parameter 64"]
-              }
-            },
-            {
-              "version": 2,
-              "componentData": {
-                "version": 1,
-                "name": "slope",
-                "type": "Button",
-                "data": {
-                  "version": 2,
-                  "onImage": "filter_014_slope_off.png",
-                  "offImage": "filter_014_slope_off.png",
-                  "buttonId": 0,
-                  "numButtonsInGroup": 2,
-                  "handleName": "Parameter 64",
-                  "gestureBehaviour": "Instant"
-                }
-              },
-              "handle remapping": {
-                "version": 1,
-                "map": []
-              },
-              "bounds": {
-                "version": 2,
-                "acceptsHWFocus": "No",
-                "showWhenDataModelInvalid": "Hide",
-                "whenVisible": "Always",
-                "boundsType": "Absolute",
-                "bounds": "219 514 69 34",
-                "additionalInvalidatingHandles": ["IndexedEnabling/1/2/Parameter 64"]
-              }
-            },
-            {
-              "version": 2,
-              "componentData": {
-                "version": 1,
                 "name": "freq",
-                "type": "filter knob 15 freq",
+                "type": "filter knob 13 freq",
                 "data": {
                   "version": 1,
                   "handleName": "Data"
@@ -31384,7 +31266,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "324 410 119 118"
+                "bounds": "260 370 124 124"
               }
             },
             {
@@ -31395,8 +31277,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "filter_016_fshape_led0_on.png",
-                  "offImage": "filter_016_fshape_led0_off.png",
+                  "onImage": "filter_014_fshape_led0_on.png",
+                  "offImage": "filter_014_fshape_led0_off.png",
                   "buttonId": 0,
                   "numButtonsInGroup": 3,
                   "handleName": "Parameter 63",
@@ -31413,7 +31295,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "457 434 34 23"
+                "bounds": "417 360 36 24"
               }
             },
             {
@@ -31424,8 +31306,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "filter_016_fshape_led1_on.png",
-                  "offImage": "filter_016_fshape_led1_off.png",
+                  "onImage": "filter_014_fshape_led1_on.png",
+                  "offImage": "filter_014_fshape_led1_off.png",
                   "buttonId": 1,
                   "numButtonsInGroup": 3,
                   "handleName": "Parameter 63",
@@ -31442,7 +31324,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "457 463 34 23"
+                "bounds": "417 390 36 24"
               }
             },
             {
@@ -31453,8 +31335,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "filter_016_fshape_led2_on.png",
-                  "offImage": "filter_016_fshape_led2_off.png",
+                  "onImage": "filter_014_fshape_led2_on.png",
+                  "offImage": "filter_014_fshape_led2_off.png",
                   "buttonId": 2,
                   "numButtonsInGroup": 3,
                   "handleName": "Parameter 63",
@@ -31471,7 +31353,65 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "457 491 34 23"
+                "bounds": "417 420 36 24"
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "slope",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "filter_015_slope_led0_on.png",
+                  "offImage": "filter_015_slope_led0_off.png",
+                  "buttonId": 0,
+                  "numButtonsInGroup": 2,
+                  "handleName": "Parameter 64",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 1,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "531 360 36 24"
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "slope",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "filter_015_slope_led1_on.png",
+                  "offImage": "filter_015_slope_led1_off.png",
+                  "buttonId": 1,
+                  "numButtonsInGroup": 2,
+                  "handleName": "Parameter 64",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 1,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "531 390 36 24"
               }
             },
             {
@@ -31482,8 +31422,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "filter_017_fshape_off.png",
-                  "offImage": "filter_017_fshape_off.png",
+                  "onImage": "filter_016_fshape_off.png",
+                  "offImage": "filter_016_fshape_off.png",
                   "buttonId": 1,
                   "numButtonsInGroup": 3,
                   "handleName": "Parameter 63",
@@ -31500,7 +31440,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "482 514 68 34",
+                "bounds": "425 482 72 36",
                 "additionalInvalidatingHandles": ["IndexedEnabling/0/3/Parameter 63"]
               }
             },
@@ -31512,8 +31452,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "filter_017_fshape_off.png",
-                  "offImage": "filter_017_fshape_off.png",
+                  "onImage": "filter_016_fshape_off.png",
+                  "offImage": "filter_016_fshape_off.png",
                   "buttonId": 2,
                   "numButtonsInGroup": 3,
                   "handleName": "Parameter 63",
@@ -31530,7 +31470,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "482 514 68 34",
+                "bounds": "425 482 72 36",
                 "additionalInvalidatingHandles": ["IndexedEnabling/1/3/Parameter 63"]
               }
             },
@@ -31542,8 +31482,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "filter_017_fshape_off.png",
-                  "offImage": "filter_017_fshape_off.png",
+                  "onImage": "filter_016_fshape_off.png",
+                  "offImage": "filter_016_fshape_off.png",
                   "buttonId": 0,
                   "numButtonsInGroup": 3,
                   "handleName": "Parameter 63",
@@ -31560,8 +31500,68 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "482 514 68 34",
+                "bounds": "425 482 72 36",
                 "additionalInvalidatingHandles": ["IndexedEnabling/2/3/Parameter 63"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "slope",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "filter_017_slope_off.png",
+                  "offImage": "filter_017_slope_off.png",
+                  "buttonId": 1,
+                  "numButtonsInGroup": 2,
+                  "handleName": "Parameter 64",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "543 482 72 36",
+                "additionalInvalidatingHandles": ["IndexedEnabling/0/2/Parameter 64"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "slope",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "filter_017_slope_off.png",
+                  "offImage": "filter_017_slope_off.png",
+                  "buttonId": 0,
+                  "numButtonsInGroup": 2,
+                  "handleName": "Parameter 64",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "543 482 72 36",
+                "additionalInvalidatingHandles": ["IndexedEnabling/1/2/Parameter 64"]
               }
             },
             {
@@ -31590,7 +31590,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "592 53 89 89"
+                "bounds": "685 57 94 94"
               }
             },
             {
@@ -31619,7 +31619,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "738 53 90 89"
+                "bounds": "877 57 94 94"
               }
             },
             {
@@ -31648,7 +31648,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "840 46 35 23"
+                "bounds": "988 54 36 24"
               }
             },
             {
@@ -31677,7 +31677,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "840 74 35 23"
+                "bounds": "988 84 36 24"
               }
             },
             {
@@ -31706,7 +31706,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "840 103 35 23"
+                "bounds": "988 114 36 24"
               }
             },
             {
@@ -31735,7 +31735,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "855 140 69 34",
+                "bounds": "1056 78 72 36",
                 "additionalInvalidatingHandles": ["IndexedEnabling/0/3/Parameter 163"]
               }
             },
@@ -31765,7 +31765,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "855 140 69 34",
+                "bounds": "1056 78 72 36",
                 "additionalInvalidatingHandles": ["IndexedEnabling/1/3/Parameter 163"]
               }
             },
@@ -31795,7 +31795,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "855 140 69 34",
+                "bounds": "1056 78 72 36",
                 "additionalInvalidatingHandles": ["IndexedEnabling/2/3/Parameter 163"]
               }
             },
@@ -31825,7 +31825,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "979 53 90 89"
+                "bounds": "1139 57 94 94"
               }
             },
             {
@@ -31854,7 +31854,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "599 240 89 90"
+                "bounds": "713 253 94 94"
               }
             },
             {
@@ -31883,7 +31883,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "761 240 90 90",
+                "bounds": "877 253 94 94",
                 "additionalInvalidatingHandles": ["IndexedEnabling/0/2/Parameter 172"]
               }
             },
@@ -31913,7 +31913,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "761 240 90 90",
+                "bounds": "877 253 94 94",
                 "additionalInvalidatingHandles": ["IndexedEnabling/1/2/Parameter 172"]
               }
             },
@@ -31943,7 +31943,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "876 244 73 34"
+                "bounds": "1020 272 76 36"
               }
             },
             {
@@ -31972,7 +31972,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "979 240 90 90"
+                "bounds": "1139 253 94 94"
               }
             },
             {
@@ -32001,7 +32001,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "600 452 73 35"
+                "bounds": "694 472 76 36"
               }
             },
             {
@@ -32030,7 +32030,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "738 425 90 89"
+                "bounds": "877 451 94 94"
               }
             },
             {
@@ -32059,7 +32059,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "840 425 35 23"
+                "bounds": "988 448 36 24"
               }
             },
             {
@@ -32088,7 +32088,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "840 453 35 23"
+                "bounds": "988 478 36 24"
               }
             },
             {
@@ -32117,7 +32117,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "840 482 35 22"
+                "bounds": "988 508 36 24"
               }
             },
             {
@@ -32146,7 +32146,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "855 518 69 35",
+                "bounds": "1056 472 72 36",
                 "additionalInvalidatingHandles": ["IndexedEnabling/0/3/Parameter 289"]
               }
             },
@@ -32176,7 +32176,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "855 518 69 35",
+                "bounds": "1056 472 72 36",
                 "additionalInvalidatingHandles": ["IndexedEnabling/1/3/Parameter 289"]
               }
             },
@@ -32206,7 +32206,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "855 518 69 35",
+                "bounds": "1056 472 72 36",
                 "additionalInvalidatingHandles": ["IndexedEnabling/2/3/Parameter 289"]
               }
             },
@@ -32236,12 +32236,12 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "979 425 90 89"
+                "bounds": "1139 451 94 94"
               }
             }
           ]
         },
-        "qlinkBoundsData": ["318 35 244 519", "203 35 231 282", "586 40 489 296", "732 234 343 325"]
+        "qlinkBoundsData": ["254 59 367 465", "64 59 311 256", "679 51 560 302", "871 247 368 304"]
       },
       {
         "version": 1,

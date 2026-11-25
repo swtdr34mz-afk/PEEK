@@ -135,6 +135,7 @@ struct Page {
     String name;
     int key = 0;
     Rectangle<float> region;             /* the panel's part, in its pixels */
+    bool custom = false;                 /* drawn for the MPC (not the panel's part): its extra draws it all */
     float s = 1.0f;
     Point<float> off;
     std::vector<Ctl> ctls;
@@ -252,39 +253,104 @@ Page oscPage()
 
 Page filterPage()
 {
+    /* drawn for the MPC's screen (the Peak's part is taller than wide): the same sections, controls and words as
+       the VST's, spread over the whole width, every control a little larger and further apart for a finger */
     Builder b("FILTER", 1, 572, 306, 957, 545);
+    b.pg.custom = true;
     bottomControls(b);
-    b.K(598, 338, "flfo1");
-    b.K(654, 338, "fosc3");
-    b.K(709, 338, "keytrk");
-    b.K(598, 414, "fenva", {when("fenv_src", 0)});
-    b.K(598, 414, "fenv1", {when("fenv_src", 1)});
-    b.K(654, 414, "reso");
-    b.K(709, 414, "drive");
-    b.L("fenv_src", {{{586, 449}, 0}, {{586, 460}, 1}});
-    b.B(598, 477, "fenv_src", Ctl::cycle);
-    b.L("slope", {{{586, 503}, 0}, {{586, 514}, 1}});
-    b.B(598, 526, "slope", Ctl::cycle);
-    b.K(654, 500, "freq", {}, 86.0f, true);
-    b.L("fshape", {{{693, 490}, 0}, {{693, 502}, 1}, {{693, 514}, 2}});
-    b.B(711, 526, "fshape", Ctl::cycle);
-    b.K(763, 343, "dist");
-    b.K(826, 343, "ch_rate");
-    b.L("ch_type", {{{858, 326}, 0}, {{858, 338}, 1}, {{858, 350}, 2}});
-    b.B(872, 368, "ch_type", Ctl::cycle);
-    b.K(930, 343, "ch_level");
-    b.K(766, 422, "dl_fb");
-    b.K(836, 422, "dl_time", {when("dl_sync", 0)});
-    b.K(836, 422, "dl_syncrate", {when("dl_sync", 1)});
-    b.B(882, 412, "dl_sync", Ctl::toggle, BtnStyle::pale, 56, 26);
-    b.K(930, 422, "dl_level");
-    b.B(763, 500, "fx_bypass", Ctl::toggle, BtnStyle::pale, 56, 26);
-    b.K(826, 500, "rv_time");
-    b.L("rvtype", {{{858, 486}, 0}, {{858, 498}, 1}, {{858, 510}, 2}});
-    b.B(872, 528, "rvtype", Ctl::cycle);
-    b.K(930, 500, "rv_level");
+    const float S = 1.35f, KD = 64.0f * S, BW = 52.0f * S, BH = 26.0f * S, PW = 56.0f * S, LW = 21.0f * S, LG = (11.0f + 1.5f) * S;
+    struct Leg {
+        Rectangle<float> r;
+        String t;
+        bool small;
+    };
+    auto legs = std::make_shared<std::vector<Leg>>();
+    auto secs = std::make_shared<std::vector<std::pair<Rectangle<float>, std::pair<String, bool>>>>();
+    auto knob = [&](float x, float y, const String &id, const String &leg, std::vector<Cond> show = {}, float d = 0.0f, bool big = false) {
+        float dd = d > 0.0f ? d : KD;
+        Ctl c{Ctl::knob, id, Rectangle<float>(dd, dd).withCentre({x, y})};
+        c.big = big;
+        c.show = std::move(show);
+        b.add(c);
+        if (leg.isNotEmpty())
+            legs->push_back({Rectangle<float>(x - 100.0f, y + dd * 0.5f + 1.0f * S, 200.0f, 16.0f * S), leg, false});
+    };
+    auto button = [&](float x, float y, const String &id, Ctl::Mode m, const String &leg, bool pale = false) {
+        Ctl c{Ctl::button, id, Rectangle<float>(pale ? PW : BW, BH).withCentre({x, y})};
+        c.mode = m;
+        c.style = pale ? BtnStyle::pale : BtnStyle::rubber;
+        b.add(c);
+        legs->push_back({Rectangle<float>(x - 100.0f, y + 13.0f * S, 200.0f, 16.0f * S), leg, false});
+    };
+    auto leds = [&](float x, float y0, const String &id, StringArray names, float step = 30.0f) {
+        Ctl l{Ctl::leds, id, {}};
+        for (int i = 0; i < names.size(); i++) {
+            l.pts.push_back({{x, y0 + step * (float)i}, i});
+            legs->push_back({Rectangle<float>(x + LW * 0.5f + 7.0f, y0 + step * (float)i - 10.0f, 120.0f, 20.0f), names[i], true});
+        }
+        l.lw = LW;
+        b.add(l);
+    };
+    auto sec = [&](float x0, float y0, float x1, float y1, const String &t, bool arrow = false) {
+        secs->push_back({{x0, y0, x1 - x0, y1 - y0}, {t, arrow}});
+    };
+    /* FILTER: the left half */
+    sec(12, 10, 632, 576, "FILTER", true);
+    const float c1 = 117, c2 = 322, c3 = 527;
+    knob(c1, 112, "flfo1", "LFO 1 Depth");
+    knob(c2, 112, "fosc3", "Osc 3 Filter Mod");
+    knob(c3, 112, "keytrk", "Key Tracking");
+    knob(c1, 262, "fenva", "Env Depth", {when("fenv_src", 0)});
+    knob(c1, 262, "fenv1", "", {when("fenv_src", 1)});
+    knob(c2, 262, "reso", "Resonance");
+    knob(c3, 262, "drive", "Overdrive");
+    leds(c1 - 52, 372, "fenv_src", {"Amp Env", "Mod Env 1"});
+    button(c1, 470, "fenv_src", Ctl::cycle, "Source");
+    knob(c2, 432, "freq", "Frequency", {}, 86.0f * S, true);
+    leds(c3 - 92, 372, "fshape", {"LP", "BP", "HP"});
+    leds(c3 + 22, 372, "slope", {"12 dB", "24 dB"});
+    button(c3 - 66, 500, "fshape", Ctl::cycle, "Shape");
+    button(c3 + 52, 500, "slope", Ctl::cycle, "Slope");
+    /* the effects: the right half */
+    const float x0 = 644, xs = 820, x1 = 1268;
+    sec(x0, 10, xs, 196, "DISTORTION");
+    sec(xs + 12, 10, x1, 196, "CHORUS");
+    sec(x0, 208, x1, 392, "DELAY");
+    sec(x0, 404, xs, 576, "EFFECTS");
+    sec(xs + 12, 404, x1, 576, "REVERB");
+    knob((x0 + xs) * 0.5f, 104, "dist", "Level");
+    knob(924, 104, "ch_rate", "Rate");
+    leds(1006, 66, "ch_type", {"1", "2", "3"});
+    button(1092, 96, "ch_type", Ctl::cycle, "Type");
+    knob(1186, 104, "ch_level", "Level");
+    knob(760, 300, "dl_fb", "Feedback");
+    knob(924, 300, "dl_time", "Time", {when("dl_sync", 0)});
+    knob(924, 300, "dl_syncrate", "", {when("dl_sync", 1)});
+    button(1058, 290, "dl_sync", Ctl::toggle, "Sync", true);
+    knob(1186, 300, "dl_level", "Level");
+    button((x0 + xs) * 0.5f, 490, "fx_bypass", Ctl::toggle, "Bypass", true);
+    knob(924, 498, "rv_time", "Time");
+    leds(1006, 460, "rvtype", {"1", "2", "3"});
+    button(1092, 490, "rvtype", Ctl::cycle, "Type");
+    knob(1186, 498, "rv_level", "Level");
+    b.pg.extra.insert(b.pg.extra.begin(), [legs, secs, S](Graphics &g) {
+        for (auto &[r, t] : *secs) {             /* (drawn at the VST's size, scaled as the other pages) */
+            Graphics::ScopedSaveState ss(g);
+            g.addTransform(AffineTransform::scale(S));
+            drawSection(g, r.transformedBy(AffineTransform::scale(1.0f / S)), t.first, t.second);
+        }
+        for (auto &l : *legs) {
+            if (l.small) {
+                g.setColour(col::legend);
+                g.setFont(font(Face::label, 11.0f * S));
+                g.drawText(l.t, l.r, Justification::centredLeft, false);
+            } else
+                drawLegend(g, l.t, l.r, (11.0f + 1.5f) * S);
+        }
+    });
     b.Q({{"freq", "reso", "drive", "keytrk"}, {"flfo1", "fosc3", "fenv1", "fenva"},
          {"dist", "ch_rate", "ch_level", "dl_fb"}, {"dl_time", "dl_level", "rv_time", "rv_level"}});
+    (void)LG;
     return b.pg;
 }
 
@@ -542,9 +608,11 @@ Image background(PeekPanel &panel, const Page &pg)
     drawPanelFace(g, Rectangle<float>(0.0f, 0.0f, (float)TW, (float)TH), 1.0f);
     for (auto *c : panel.getChildren())
         c->setVisible(false);
-    auto part = panel.createComponentSnapshot(pg.region.getSmallestIntegerContainer(), true, pg.s);
-    g.drawImage(part, Rectangle<float>(pg.off.x, pg.off.y, pg.region.getWidth() * pg.s, pg.region.getHeight() * pg.s),
-                RectanglePlacement::stretchToFit);
+    if (!pg.custom) {
+        auto part = panel.createComponentSnapshot(pg.region.getSmallestIntegerContainer(), true, pg.s);
+        g.drawImage(part, Rectangle<float>(pg.off.x, pg.off.y, pg.region.getWidth() * pg.s, pg.region.getHeight() * pg.s),
+                    RectanglePlacement::stretchToFit);
+    }
     for (auto &f : pg.extra)
         f(g);
     /* the bottom strip: PEEK, the page; the maker's tag */
