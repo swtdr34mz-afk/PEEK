@@ -1,0 +1,13 @@
+{
+  "id": "peek",
+  "name": "PEEK",
+  "author": "swtdr34mz",
+  "repo": "swtdr34mz-afk/PEEK",
+  "kind": "instrument",
+  "license": "MPL-2.0",
+  "summary": "A polysynth in the manner of the Novation Peak: three oscillators per voice (sine, triangle, saw, pulse with shape, VSync, saw density, 60 wavetables), linear FM between them, ring mod and noise, a state-variable LP/BP/HP filter (12/24 dB) between a fattening overdrive and a bright post drive, three looping envelopes, four LFOs, animate, a 16-slot modulation matrix and a 4-slot FX matrix, arp with 33 rhythms, distortion, chorus, delay and reverb. 8 or 16 voices, ECO and HIGH quality.",
+  "style": "polysynth",
+  "tags": ["hybrid", "polyphonic", "wavetable", "fm", "arpeggiator"],
+  "asset_pattern": "PEEK-*-mpc-armv7.zip",
+  "screenshot": "https://raw.githubusercontent.com/swtdr34mz-afk/PEEK/v1.0.0/mpc/catalog/screenshot.png"
+}

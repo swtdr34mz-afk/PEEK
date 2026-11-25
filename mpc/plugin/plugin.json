@@ -1,0 +1,17 @@
+{
+  "name": "PEEK",
+  "manufacturer": "swtdr34mz",
+  "version": "1.0.0",
+  "format": "vst2",
+  "kind": "instrument",
+  "uid": "Peek",
+  "numInputs": 0,
+  "numOutputs": 2,
+  "category": "Synth",
+  "file32": "VST/peek-arm32.so",
+  "file64": "VST/peek-arm64.so",
+  "description": "PEEK: an 8- or 16-voice poly in the style of the Novation Peak. Three oscillators with shape, VSync, saw density and 60 wavetables, linear FM, a state-variable LP/BP/HP filter between overdrive and post drive, three envelopes, four LFOs, animate, a 16-slot mod matrix, arp, distortion, chorus, delay and reverb. The same engine as the PEEK VST3.",
+  "author": "swtdr34mz",
+  "url": "https://github.com/swtdr34mz-afk/PEEK",
+  "license": "MPL-2.0"
+}
