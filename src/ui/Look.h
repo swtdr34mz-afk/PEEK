@@ -13,7 +13,7 @@ namespace pkui
 namespace col
 {
 const juce::Colour panel{0xff17181a}, legend{0xffeceff1}, dim{0xff8e959b}, blue{0xff3aa6e6}, led{0xffff7a1a},
-    oledBg{0xff020304}, oled{0xffe9f1ff}, oledDim{0xff6a7580};
+    oledBg{0xff020304}, oled{0xffd4e7fb}, oledDim{0xff6a7580};
 }
 
 enum class Face { label, title, logo, mono };

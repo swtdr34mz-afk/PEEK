@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 swtdr34mz (PEEK) */
 #include "PluginEditor.h"
+#include "ui/PixelFont.h"
 
 using namespace pkui;
 using namespace pk;
@@ -372,28 +373,29 @@ public:
         g.fillRoundedRectangle(r, 2.0f);
         g.setColour(Colours::white.withAlpha(0.07f));
         g.drawRoundedRectangle(r.reduced(0.5f), 2.0f, 1.0f);
-        auto in = r.reduced(9.0f, 6.0f);
-        const float lh = in.getHeight() / 4.0f;
+        /* the Peak's OLED: a dot matrix, 5 x 7 glyphs (descenders two dots below), four lines of 11 dots */
+        auto in = r.reduced(8.0f, 6.0f);
+        const float d = in.getHeight() / 44.0f, lh = 11.0f * d;
+        const int cols = (int)((in.getWidth() + d) / (6.0f * d));
         auto line = [&](int i) { return Rectangle<float>(in.getX(), in.getY() + lh * (float)i, in.getWidth(), lh); };
-        auto mono = font(Face::mono, lh * 0.92f);
-        g.setFont(mono);
+        auto top = [&](int i) { return in.getY() + lh * (float)i + d; };
+        auto fit = [](const String &t, int n) { return n <= 0 ? String() : t.substring(0, n); };
         if (panel.showingTouch()) {
-            /* a control touched: its name and value, large */
+            /* a control touched: its name, and its value large */
             String name, val;
             what(name, val);
-            g.setColour(col::oled);
-            g.drawText(name, line(0).withHeight(lh * 1.2f), Justification::centredLeft, true);
-            g.setFont(font(Face::mono, lh * 1.55f));
-            g.drawFittedText(val, Rectangle<float>(in.getX(), in.getY() + lh * 1.5f, in.getWidth(), lh * 2.4f).toNearestInt(),
-                             Justification::centred, 1, 0.6f);
+            pix(g, fit(name, cols), in.getX(), top(0), d, true);
+            float d2 = jmin(2.0f * d, (in.getWidth() + d) / jmax(1.0f, 6.0f * (float)val.length()));
+            float w = width(val, d2, false);
+            pix(g, val, in.getCentreX() - w * 0.5f, in.getY() + lh * 2.6f - 3.5f * d2, d2, false);
             return;
         }
         auto pg = panel.page();
         auto ps = panel.pages(panel.menu);
         int pi = juce::jlimit(0, (int)ps.size() - 1, panel.pageOf[panel.menu]);
-        g.setColour(col::oled);
-        g.drawText(pg.title, line(0), Justification::centredLeft, true);
-        g.drawText(String(pi + 1) + "/" + String((int)ps.size()), line(0), Justification::centredRight, false);
+        String pn = String(pi + 1) + "/" + String((int)ps.size());
+        pix(g, fit(pg.title.toUpperCase(), (cols * 6) / 7 - pn.length() - 1), in.getX(), top(0), d, true);
+        pix(g, pn, in.getRight() - width(pn, d, false), top(0), d, false);
         rowsAt.clear();
         for (int i = 0; i < 3; i++) {
             auto lr = line(i + 1);
@@ -402,24 +404,26 @@ public:
                 continue;
             bool sel = panel.row == i;
             if (sel) {
-                g.setColour(col::oled.withAlpha(0.13f));
+                g.setColour(col::oled.withAlpha(0.10f));
                 g.fillRect(lr.expanded(4.0f, 0.0f));
             }
-            g.setColour(col::oled);
             auto &e = pg.rows[(size_t)i];
             int v = e.get();
             String vt = e.text ? e.text(v) : String(v);
+            float y = top(i + 1);
             if (pg.mod && i == 0) {
                 /* the slot's two sources: the one in hand marked */
-                auto half = lr.withWidth(lr.getWidth() * 0.5f);
-                int b = pg.modBase;
+                int b = pg.modBase, half = cols / 2;
                 String a = String(MODSRC_NAME[panel.proc.value(b + MOD_SA)]), bb = String(MODSRC_NAME[panel.proc.value(b + MOD_SB)]);
-                g.drawText((panel.modAB == 0 && sel ? ">" : ":") + a, half, Justification::centredLeft, true);
-                g.drawText(bb + (panel.modAB == 1 && sel ? "<" : ":"), half.translated(half.getWidth(), 0.0f), Justification::centredRight, true);
+                String la = fit((panel.modAB == 0 && sel ? ">" : ":") + a, half - 1);
+                String rb = fit(bb, half - 2) + (panel.modAB == 1 && sel ? "<" : ":");
+                pix(g, la, in.getX(), y, d, false);
+                pix(g, rb, in.getRight() - width(rb, d, false), y, d, false);
                 continue;
             }
-            g.drawText(e.label, lr, Justification::centredLeft, true);
-            g.drawText(vt, lr, Justification::centredRight, true);
+            vt = fit(vt, cols);
+            pix(g, fit(e.label, cols - vt.length() - 1), in.getX(), y, d, false);
+            pix(g, vt, in.getRight() - width(vt, d, false), y, d, false);
         }
     }
     void mouseWheelMove(const juce::MouseEvent &, const juce::MouseWheelDetails &w) override
@@ -452,6 +456,34 @@ public:
     }
 
 private:
+    /* one line in the OLED's dots: x, y its top left, d one dot; bold: every dot doubled to the right */
+    static float width(const juce::String &t, float d, bool bold)
+    {
+        return t.isEmpty() ? 0.0f : ((float)t.length() * (bold ? 7.0f : 6.0f) - 1.0f) * d;
+    }
+    static void pix(juce::Graphics &g, const juce::String &t, float x, float y, float d, bool bold)
+    {
+        juce::RectangleList<float> dots;
+        const float s = d * 0.86f;                  /* (a hair between the dots, as on the glass) */
+        for (auto p = t.getCharPointer(); !p.isEmpty();) {
+            juce::juce_wchar c = p.getAndAdvance();
+            int gi = (c < 32 || c > 127) ? '?' - 32 : (int)c - 32;
+            for (int row = 0; row < 9; row++) {
+                unsigned bits = PIXFONT[gi][row];
+                if (bold)
+                    bits = (bits << 1) | bits;
+                for (int col = 0; col < (bold ? 6 : 5); col++)
+                    if (bits & (1u << ((bold ? 5 : 4) - col)))
+                        dots.addWithoutMerging({x + (float)col * d, y + (float)row * d, s, s});
+            }
+            x += (bold ? 7.0f : 6.0f) * d;
+        }
+        g.setColour(col::oled.withAlpha(0.16f));     /* (the faint glow round each dot) */
+        for (auto &q : dots)
+            g.fillRect(q.expanded(d * 0.22f));
+        g.setColour(col::oled);
+        g.fillRectList(dots);
+    }
     void what(juce::String &name, juce::String &val) const
     {
         if (panel.shownGlobal) {
@@ -660,7 +692,7 @@ std::vector<Panel::Page> Panel::pages(Menu m) const
         }
         break;
     case M_VOICE:
-        page("VOICE", {pe(P_UNISON, "Unison"), pe(P_UNIDET, "UniDeTune"), pe(P_UNISPREAD, "UniSpread")});
+        page("VOICE", {pe(P_UNISON, "Unison"), pe(P_UNIDET, "UniDetune"), pe(P_UNISPREAD, "Spread")});
         page("VOICE", {pe(P_PREGLIDE, "PreGlide"), pe(P_MODE, "Mode"), pe(P_PATCHLVL, "PatchLevel")});
         page("VOICE", {pe(P_POSTDRV, "FltPostDrv"), pe(P_FDIVERGE, "FltDiverge")});
         page("VOICE", {pe(P_SPREADMODE, "SpreadMode"), pe(P_PAN, "PanPosn")});
@@ -920,19 +952,19 @@ void Panel::build()
         auto *b = add<Btn>(BtnStyle::pale, [this, k] { proc.command(PeekProcessor::C_ANIMATE, k, 1); },
                            [this, k] { return proc.animLed[k].load(); }, [this, k] { proc.command(PeekProcessor::C_ANIMATE, k, 0); });
         b->text = juce::String(k + 1);
-        place(b, 68, k ? 254.0f : 227.0f, 44, 40);
+        place(b, 68, k ? 250.0f : 225.0f, 44, 40);
     }
-    button(68, 276, BtnStyle::rubber, [this] { proc.command(PeekProcessor::C_HOLD, 0, proc.holdLed.load() ? 0 : 1); },
+    button(68, 271, BtnStyle::rubber, [this] { proc.command(PeekProcessor::C_HOLD, 0, proc.holdLed.load() ? 0 : 1); },
            [this] { return proc.holdLed.load(); }, 40, 16);
     /* PATCH: Initialise, Compare, Audition, Save; the patch knob, - and + */
-    button(135, 132, BtnStyle::rubber, [this] { proc.initialise(); menu = M_PATCH; }, [] { return false; });
-    button(170, 132, BtnStyle::rubber, [this] { proc.setCompare(!proc.compare); }, [this] { return proc.compare; });
+    button(135, 137, BtnStyle::rubber, [this] { proc.initialise(); menu = M_PATCH; }, [] { return false; });
+    button(170, 137, BtnStyle::rubber, [this] { proc.setCompare(!proc.compare); }, [this] { return proc.compare; });
     {
         auto *b = add<Btn>(BtnStyle::rubber, [this] { proc.command(PeekProcessor::C_AUDITION, 0, 1); }, [] { return false; },
                            [this] { proc.command(PeekProcessor::C_AUDITION, 0, 0); });
-        place(b, 135, 157, 52, 26);
+        place(b, 135, 161, 52, 26);
     }
-    button(170, 157, BtnStyle::rubber, [this] { saveDialog(); }, [] { return false; });
+    button(170, 161, BtnStyle::rubber, [this] { saveDialog(); }, [] { return false; });
     {
         auto *k = add<Knob>([this](int d) { changePatch(d); });
         place(k, 150, 205, KD, KD);
@@ -952,7 +984,7 @@ void Panel::build()
     /* the display, its row buttons, the data knob, PAGE, VALUE */
     {
         for (int i = 0; i < 3; i++)
-            button(206, 207.0f + 19.0f * (float)i, BtnStyle::rubber, [this, i] {
+            button(206, 200.0f + 19.0f * (float)i, BtnStyle::rubber, [this, i] {
                 if (page().mod && i == 0 && row == 0)
                     modAB ^= 1;                      /* (the source row's button: A, then B) */
                 row = i;
@@ -960,14 +992,14 @@ void Panel::build()
                 shownGlobal = nullptr;
             }, [this, i] { return row == i && !showingTouch(); }, 50, 24);
         auto *o = add<Oled>(*this);
-        o->setBounds(R(226, 198, 372, 262).toNearestInt());
+        o->setBounds(R(226, 191, 372, 255).toNearestInt());
         oledView = o;
         auto *k = add<Knob>([this](int d) { valueStep(d); });
-        place(k, 412, 222, 70, 70);
-        button(285, 279, BtnStyle::pale, [this] { pageStep(-1); }, [] { return false; }, 56, 24);
-        button(320, 279, BtnStyle::pale, [this] { pageStep(1); }, [] { return false; }, 56, 24);
-        button(420, 268, BtnStyle::rubber, [this] { valueStep(-1); }, [] { return false; }, 50, 24);
-        button(452, 268, BtnStyle::rubber, [this] { valueStep(1); }, [] { return false; }, 50, 24);
+        place(k, 412, 216, 70, 70);
+        button(285, 266, BtnStyle::pale, [this] { pageStep(-1); }, [] { return false; }, 56, 24);
+        button(320, 266, BtnStyle::pale, [this] { pageStep(1); }, [] { return false; }, 56, 24);
+        button(420, 266, BtnStyle::rubber, [this] { valueStep(-1); }, [] { return false; }, 50, 24);
+        button(452, 266, BtnStyle::rubber, [this] { valueStep(1); }, [] { return false; }, 50, 24);
     }
     /* ARP */
     knob(487, 165, P_ARP_GATE);
@@ -978,16 +1010,16 @@ void Panel::build()
         int b = k ? P_LFO2 : P_LFO1;
         float ox = k ? 222.0f : 0.0f;
         leds({{527 + ox, 130}, {527 + ox, 142}, {527 + ox, 154}, {527 + ox, 166}}, is(b + LFO_TYPE, 0), setTo(b + LFO_TYPE));
-        button(538 + ox, 186, BtnStyle::rubber, cycle(b + LFO_TYPE, NLFOTYPE), [] { return false; });
+        button(538 + ox, 181, BtnStyle::rubber, cycle(b + LFO_TYPE, NLFOTYPE), [] { return false; });
         knob(592 + ox, 158, b + LFO_FADE);
         leds({{636 + ox, 135}, {636 + ox, 147}, {636 + ox, 159}}, is(b + LFO_RANGE, 0), setTo(b + LFO_RANGE));
-        button(650 + ox, 186, BtnStyle::rubber, cycle(b + LFO_RANGE, NLFORANGE), [] { return false; });
+        button(650 + ox, 181, BtnStyle::rubber, cycle(b + LFO_RANGE, NLFORANGE), [] { return false; });
         dknob(706 + ox, 158, [this, b]() -> juce::RangedAudioParameter * {
             return proc.param(proc.value(b + LFO_RANGE) == LR_SYNC ? b + LFO_SYNC : b + LFO_RATE);
         });
     }
     /* GLIDE */
-    knob(540, 231, P_GLIDE);
+    knob(540, 236, P_GLIDE);
     button(540, 282, BtnStyle::pale, toggle(P_GLIDE_ON), isOn(P_GLIDE_ON), 56, 26);
     /* AMP ENVELOPE, MOD ENVELOPES */
     {
@@ -995,13 +1027,13 @@ void Panel::build()
         for (int i = 0; i < 4; i++) {
             int p = P_AENV + E[i];
             auto *f = add<Fader>(P(p), touchP(p));
-            f->setBounds(Rectangle<float>(60.0f, Y(293) - Y(212)).withCentre(at(592.0f + 42.0f * (float)i, 252.5f)).toNearestInt());
+            f->setBounds(Rectangle<float>(60.0f, Y(289) - Y(217)).withCentre(at(592.0f + 42.0f * (float)i, 253.0f)).toNearestInt());
         }
         for (int i = 0; i < 4; i++) {
             int e = E[i];
             auto *f = add<Fader>([this, e]() -> juce::RangedAudioParameter * { return proc.param((proc.value(P_MENV_SEL) ? P_M2ENV : P_M1ENV) + e); },
                                  touchAny());
-            f->setBounds(Rectangle<float>(60.0f, Y(293) - Y(212)).withCentre(at(814.0f + 44.0f * (float)i, 252.5f)).toNearestInt());
+            f->setBounds(Rectangle<float>(60.0f, Y(289) - Y(217)).withCentre(at(808.0f + 42.0f * (float)i, 253.0f)).toNearestInt());
         }
         leds({{757, 238}, {757, 250}}, is(P_MENV_SEL, 0), setTo(P_MENV_SEL));
         button(766, 276, BtnStyle::rubber, cycle(P_MENV_SEL, 2), [] { return false; });
@@ -1021,7 +1053,7 @@ void Panel::build()
         leds({{216, 326 + oy}, {241, 326 + oy}, {216, 338 + oy}, {241, 338 + oy}, {216, 350 + oy}},
              [this, b](int i) { static const int M[5] = {W_SINE, W_SQUARE, W_TRI, W_MORE, W_SAW}; return proc.value(b + OSC_WAVE) == M[i] ? 1.0f : 0.0f; },
              [this, b](int i) { static const int M[5] = {W_SINE, W_SQUARE, W_TRI, W_MORE, W_SAW}; proc.setValue(b + OSC_WAVE, M[i]); touch(b + OSC_WAVE); });
-        button(230, 368 + oy, BtnStyle::rubber, [this, b] {
+        button(230, 366 + oy, BtnStyle::rubber, [this, b] {
             static const int NEXT[NWAVE] = {W_TRI, W_SAW, W_SQUARE, W_MORE, W_SINE};
             proc.setValue(b + OSC_WAVE, NEXT[proc.value(b + OSC_WAVE)]);
             touch(proc.value(b + OSC_WAVE) == W_MORE ? b + OSC_MORE : b + OSC_WAVE);
@@ -1062,13 +1094,13 @@ void Panel::build()
     }, setTo(P_FENV_SRC));
     button(598, 477, BtnStyle::rubber, cycle(P_FENV_SRC, 2), [] { return false; });
     leds({{586, 503}, {586, 514}}, is(P_SLOPE, 0), setTo(P_SLOPE));
-    button(598, 533, BtnStyle::rubber, cycle(P_SLOPE, 2), [] { return false; });
+    button(598, 526, BtnStyle::rubber, cycle(P_SLOPE, 2), [] { return false; });
     {
         auto *k = add<Knob>(P(P_FREQ), touchP(P_FREQ), true);
         place(k, 654, 500, 86, 86);
     }
     leds({{693, 490}, {693, 502}, {693, 514}}, is(P_FSHAPE, 0), setTo(P_FSHAPE));
-    button(711, 533, BtnStyle::rubber, cycle(P_FSHAPE, NFSHAPE), [] { return false; });
+    button(711, 526, BtnStyle::rubber, cycle(P_FSHAPE, NFSHAPE), [] { return false; });
     /* DISTORTION, CHORUS */
     knob(763, 343, P_DIST);
     knob(826, 343, P_CH_RATE);
@@ -1236,14 +1268,14 @@ void Panel::paintBackground(juce::Graphics &g, float sc)
     };
     under(80, 150, "Volume");
     /* PATCH */
-    underB(135, 132, "Initialise");
-    underB(170, 132, "Compare");
-    underB(135, 157, "Audition");
-    underB(170, 157, "Save");
+    underB(135, 137, "Initialise");
+    underB(170, 137, "Compare");
+    underB(135, 161, "Audition");
+    underB(170, 161, "Save");
     small(R(124, 262, 136, 274), "-", Justification::centred, 14.0f);
     small(R(162, 262, 174, 274), "+", Justification::centred, 14.0f);
     small(R(136, 262, 162, 274), "Patch", Justification::centred);
-    small(R(58, 281, 78, 289), "Hold", Justification::centred, 9.0f);
+    small(R(58, 275.5f, 78, 283.5f), "Hold", Justification::centred, 9.0f);
     /* MENU */
     underB(207, 160, "Patch");
     {
@@ -1256,8 +1288,8 @@ void Panel::paintBackground(juce::Graphics &g, float sc)
         }
         small(R(398, 171, 460, 181), "Active Voices", Justification::centred, 10.0f);
     }
-    small(R(270, 284, 335, 296), String::fromUTF8("\xe2\x97\x80  Page/Select  \xe2\x96\xb6"), Justification::centred);
-    small(R(410, 274, 462, 286), "-   Value   +", Justification::centred);
+    small(R(270, 272.5f, 335, 284.5f), String::fromUTF8("\xe2\x97\x80  Page/Select  \xe2\x96\xb6"), Justification::centred);
+    small(R(410, 272.5f, 462, 284.5f), "-   Value   +", Justification::centred);
     /* ARP */
     under(487, 165, "Gate");
     underB(487, 228, "Key Latch");
@@ -1269,23 +1301,23 @@ void Panel::paintBackground(juce::Graphics &g, float sc)
         for (int i = 0; i < 3; i++)
             drawSym(g, SY[i], Rectangle<float>(X(535 + ox), Y(130 + 12.0f * (float)i) - 5.0f, 14.0f, 10.0f));
         small(Rectangle<float>(X(534 + ox), Y(166) - 7.0f, 40.0f, 14.0f), "S+H");
-        underB(538 + ox, 186, "Type");
+        underB(538 + ox, 181, "Type");
         under(592 + ox, 158, "Fade Time");
         small(Rectangle<float>(X(643 + ox), Y(135) - 7.0f, 40.0f, 14.0f), "Low");
         small(Rectangle<float>(X(643 + ox), Y(147) - 7.0f, 40.0f, 14.0f), "High");
         small(Rectangle<float>(X(643 + ox), Y(159) - 7.0f, 40.0f, 14.0f), "Sync");
         under(706 + ox, 158, "Rate");
-        bracket(650 + ox, 706 + ox, 196, "Range", true);
+        bracket(650 + ox, 706 + ox, 193, "Range", true);
     }
     /* GLIDE */
-    under(540, 231, "Time");
+    under(540, 236, "Time");
     underB(540, 282, "On");
     /* ENVELOPES */
     {
         const char *EN[4] = {"Attack", "Decay", "Sustain", "Release"};
         for (int i = 0; i < 4; i++) {
-            small(Rectangle<float>(X(592.0f + 42.0f * (float)i) - 40.0f, Y(294), 80.0f, 16.0f), EN[i], Justification::centred, LS + 1.5f);
-            small(Rectangle<float>(X(814.0f + 44.0f * (float)i) - 40.0f, Y(294), 80.0f, 16.0f), EN[i], Justification::centred, LS + 1.5f);
+            small(Rectangle<float>(X(592.0f + 42.0f * (float)i) - 40.0f, Y(290), 80.0f, 16.0f), EN[i], Justification::centred, LS + 1.5f);
+            small(Rectangle<float>(X(808.0f + 42.0f * (float)i) - 40.0f, Y(290), 80.0f, 16.0f), EN[i], Justification::centred, LS + 1.5f);
         }
         small(Rectangle<float>(X(765), Y(238) - 7.0f, 20.0f, 14.0f), "1");
         small(Rectangle<float>(X(765), Y(250) - 7.0f, 20.0f, 14.0f), "2");
@@ -1306,15 +1338,15 @@ void Panel::paintBackground(juce::Graphics &g, float sc)
         drawSym(g, Sym::tri, Rectangle<float>(X(223), Y(338 + oy) - 5.0f, 14.0f, 10.0f));
         small(Rectangle<float>(X(248), Y(338 + oy) - 7.0f, 40.0f, 14.0f), "more", Justification::centredLeft, 10.0f);
         drawSym(g, Sym::saw, Rectangle<float>(X(223), Y(350 + oy) - 5.0f, 14.0f, 10.0f));
-        underB(230, 368 + oy, "Wave");
+        underB(230, 366 + oy, "Wave");
         under(277, 343 + oy, "Mod Env 2 Depth");
         under(333, 343 + oy, "LFO 2 Depth");
         under(389, 343 + oy, "Shape Amount");
         small(Rectangle<float>(X(429), Y(326 + oy) - 7.0f, 70.0f, 14.0f), "Manual");
         small(Rectangle<float>(X(429), Y(338 + oy) - 7.0f, 70.0f, 14.0f), "Mod Env 1");
         small(Rectangle<float>(X(429), Y(350 + oy) - 7.0f, 70.0f, 14.0f), "LFO 1");
-        bracket(277, 333, 379 + oy, "Pitch");
-        bracket(389, 428, 379 + oy, "Source", false);
+        bracket(277, 333, 377 + oy, "Pitch");
+        bracket(389, 428, 377 + oy, "Source", false);
     }
     /* MIXER */
     under(489, 343, "Osc 1");
@@ -1335,12 +1367,12 @@ void Panel::paintBackground(juce::Graphics &g, float sc)
     underB(598, 477, "Source");
     small(Rectangle<float>(X(594), Y(503) - 7.0f, 70.0f, 14.0f), "12 dB");
     small(Rectangle<float>(X(594), Y(514) - 7.0f, 70.0f, 14.0f), "24 dB");
-    underB(598, 533, "Slope");
+    underB(598, 526, "Slope");
     under(654, 500, "Frequency", 86.0f);
     small(Rectangle<float>(X(700), Y(490) - 7.0f, 40.0f, 14.0f), "LP");
     small(Rectangle<float>(X(700), Y(502) - 7.0f, 40.0f, 14.0f), "BP");
     small(Rectangle<float>(X(700), Y(514) - 7.0f, 40.0f, 14.0f), "HP");
-    underB(711, 533, "Shape");
+    underB(711, 526, "Shape");
     /* EFFECTS */
     under(763, 343, "Level");
     under(826, 343, "Rate");
@@ -1354,12 +1386,6 @@ void Panel::paintBackground(juce::Graphics &g, float sc)
     under(836, 422, "Time");
     underB(882, 412, "Sync");
     under(930, 422, "Level");
-    {
-        /* Time's line to Sync (the delay synced: TIME picks the division) */
-        g.setColour(col::legend);
-        g.fillRect(Rectangle<float>(X(851), Y(457), X(882) - X(851), 1.3f));
-        g.fillRect(Rectangle<float>(X(882) - 1.3f, Y(449), 1.3f, Y(457) - Y(449) + 1.3f));
-    }
     underB(763, 500, "Bypass");
     under(826, 500, "Time");
     underB(872, 528, "Type");
