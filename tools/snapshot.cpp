@@ -4,6 +4,7 @@
  *   PeekShot out.png [scale] [patch] [menu] [page] */
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include <typeinfo>
 
 int main(int argc, char **argv)
 {
@@ -48,6 +49,12 @@ int main(int argc, char **argv)
         for (auto *k : c->getChildren())
             if (auto *lv = dynamic_cast<PeekPanel::Live *>(k))
                 lv->poll();
+    if (std::getenv("PEEK_DUMP"))                 /* (every control's bounds, for the layout check) */
+        if (auto *panel = ed->getChildComponent(0))
+            for (auto *k : panel->getChildren()) {
+                auto b = k->getBounds();
+                std::printf("C %d %d %d %d %s\n", b.getX(), b.getY(), b.getRight(), b.getBottom(), typeid(*k).name());
+            }
     auto img = ed->createComponentSnapshot(ed->getLocalBounds(), true, scale);
     juce::File f = juce::File::getCurrentWorkingDirectory().getChildFile(out);
     f.deleteFile();

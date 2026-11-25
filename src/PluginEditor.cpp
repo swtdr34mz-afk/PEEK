@@ -952,25 +952,25 @@ void Panel::build()
         auto *b = add<Btn>(BtnStyle::pale, [this, k] { proc.command(PeekProcessor::C_ANIMATE, k, 1); },
                            [this, k] { return proc.animLed[k].load(); }, [this, k] { proc.command(PeekProcessor::C_ANIMATE, k, 0); });
         b->text = juce::String(k + 1);
-        place(b, 68, k ? 250.0f : 225.0f, 44, 40);
+        place(b, 79, k ? 256.0f : 230.0f, 44, 40);
     }
-    button(68, 271, BtnStyle::rubber, [this] { proc.command(PeekProcessor::C_HOLD, 0, proc.holdLed.load() ? 0 : 1); },
+    button(79, 282, BtnStyle::rubber, [this] { proc.command(PeekProcessor::C_HOLD, 0, proc.holdLed.load() ? 0 : 1); },
            [this] { return proc.holdLed.load(); }, 40, 16);
     /* PATCH: Initialise, Compare, Audition, Save; the patch knob, - and + */
-    button(135, 137, BtnStyle::rubber, [this] { proc.initialise(); menu = M_PATCH; }, [] { return false; });
-    button(170, 137, BtnStyle::rubber, [this] { proc.setCompare(!proc.compare); }, [this] { return proc.compare; });
+    button(131.5f, 141, BtnStyle::rubber, [this] { proc.initialise(); menu = M_PATCH; }, [] { return false; });
+    button(166.5f, 141, BtnStyle::rubber, [this] { proc.setCompare(!proc.compare); }, [this] { return proc.compare; });
     {
         auto *b = add<Btn>(BtnStyle::rubber, [this] { proc.command(PeekProcessor::C_AUDITION, 0, 1); }, [] { return false; },
                            [this] { proc.command(PeekProcessor::C_AUDITION, 0, 0); });
-        place(b, 135, 161, 52, 26);
+        place(b, 131.5f, 171, 52, 26);
     }
-    button(170, 161, BtnStyle::rubber, [this] { saveDialog(); }, [] { return false; });
+    button(166.5f, 171, BtnStyle::rubber, [this] { saveDialog(); }, [] { return false; });
     {
         auto *k = add<Knob>([this](int d) { changePatch(d); });
-        place(k, 150, 205, KD, KD);
+        place(k, 149, 222, KD, KD);
     }
-    button(130, 252, BtnStyle::rubber, [this] { changePatch(-1); }, [] { return false; });
-    button(168, 252, BtnStyle::rubber, [this] { changePatch(1); }, [] { return false; });
+    button(131.5f, 270, BtnStyle::rubber, [this] { changePatch(-1); }, [] { return false; });
+    button(166.5f, 270, BtnStyle::rubber, [this] { changePatch(1); }, [] { return false; });
     /* MENU: the menu buttons */
     {
         button(207, 160, BtnStyle::pale, [this] { openMenu(M_PATCH); }, [this] { return menu == M_PATCH && !showingTouch(); }, 56, 26);
@@ -984,7 +984,7 @@ void Panel::build()
     /* the display, its row buttons, the data knob, PAGE, VALUE */
     {
         for (int i = 0; i < 3; i++)
-            button(206, 200.0f + 19.0f * (float)i, BtnStyle::rubber, [this, i] {
+            button(206, 205.0f + 19.0f * (float)i, BtnStyle::rubber, [this, i] {
                 if (page().mod && i == 0 && row == 0)
                     modAB ^= 1;                      /* (the source row's button: A, then B) */
                 row = i;
@@ -992,14 +992,14 @@ void Panel::build()
                 shownGlobal = nullptr;
             }, [this, i] { return row == i && !showingTouch(); }, 50, 24);
         auto *o = add<Oled>(*this);
-        o->setBounds(R(226, 191, 372, 255).toNearestInt());
+        o->setBounds(R(226, 196, 372, 260).toNearestInt());
         oledView = o;
         auto *k = add<Knob>([this](int d) { valueStep(d); });
-        place(k, 412, 216, 70, 70);
-        button(285, 266, BtnStyle::pale, [this] { pageStep(-1); }, [] { return false; }, 56, 24);
-        button(320, 266, BtnStyle::pale, [this] { pageStep(1); }, [] { return false; }, 56, 24);
-        button(420, 266, BtnStyle::rubber, [this] { valueStep(-1); }, [] { return false; }, 50, 24);
-        button(452, 266, BtnStyle::rubber, [this] { valueStep(1); }, [] { return false; }, 50, 24);
+        place(k, 427, 224, 70, 70);
+        button(285, 274, BtnStyle::pale, [this] { pageStep(-1); }, [] { return false; }, 56, 24);
+        button(320, 274, BtnStyle::pale, [this] { pageStep(1); }, [] { return false; }, 56, 24);
+        button(412, 274, BtnStyle::rubber, [this] { valueStep(-1); }, [] { return false; }, 50, 24);
+        button(442, 274, BtnStyle::rubber, [this] { valueStep(1); }, [] { return false; }, 50, 24);
     }
     /* ARP */
     knob(487, 165, P_ARP_GATE);
@@ -1027,7 +1027,7 @@ void Panel::build()
         for (int i = 0; i < 4; i++) {
             int p = P_AENV + E[i];
             auto *f = add<Fader>(P(p), touchP(p));
-            f->setBounds(Rectangle<float>(60.0f, Y(289) - Y(217)).withCentre(at(592.0f + 42.0f * (float)i, 253.0f)).toNearestInt());
+            f->setBounds(Rectangle<float>(60.0f, Y(289) - Y(217)).withCentre(at(592.4f + 40.7f * (float)i, 253.0f)).toNearestInt());
         }
         for (int i = 0; i < 4; i++) {
             int e = E[i];
@@ -1219,8 +1219,8 @@ void Panel::paintBackground(juce::Graphics &g, float sc)
         const char *t;
         bool arrow;
     };
-    const Sec S[] = {{48, 114, 110, 200, "MASTER", false},     {48, 203, 110, 287, "ANIMATE", false},
-                     {112, 114, 186, 287, "PATCH", false},     {188, 114, 460, 287, "MENU", false},
+    const Sec S[] = {{48, 114, 110, 200, "MASTER", false},     {48, 203, 110, 303, "ANIMATE", false},
+                     {112, 114, 186, 303, "PATCH", false},     {188, 114, 460, 303, "MENU", false},
                      {462, 114, 510, 303, "ARP", false},       {512, 114, 735, 200, "LFO 1", false},
                      {737, 114, 957, 200, "LFO 2", false},     {512, 203, 570, 303, "GLIDE", false},
                      {572, 203, 735, 303, "AMP ENVELOPE", false}, {737, 203, 957, 303, "MOD ENVELOPES", false},
@@ -1268,14 +1268,14 @@ void Panel::paintBackground(juce::Graphics &g, float sc)
     };
     under(80, 150, "Volume");
     /* PATCH */
-    underB(135, 137, "Initialise");
-    underB(170, 137, "Compare");
-    underB(135, 161, "Audition");
-    underB(170, 161, "Save");
-    small(R(124, 262, 136, 274), "-", Justification::centred, 14.0f);
-    small(R(162, 262, 174, 274), "+", Justification::centred, 14.0f);
-    small(R(136, 262, 162, 274), "Patch", Justification::centred);
-    small(R(58, 275.5f, 78, 283.5f), "Hold", Justification::centred, 9.0f);
+    underB(131.5f, 141, "Initialise");
+    underB(166.5f, 141, "Compare");
+    underB(131.5f, 171, "Audition");
+    underB(166.5f, 171, "Save");
+    small(R(125.5f, 278, 137.5f, 290), "-", Justification::centred, 14.0f);
+    small(R(160.5f, 278, 172.5f, 290), "+", Justification::centred, 14.0f);
+    small(R(137.5f, 278, 160.5f, 290), "Patch", Justification::centred);
+    small(R(69, 289, 89, 297), "Hold", Justification::centred, 9.0f);
     /* MENU */
     underB(207, 160, "Patch");
     {
@@ -1288,8 +1288,8 @@ void Panel::paintBackground(juce::Graphics &g, float sc)
         }
         small(R(398, 171, 460, 181), "Active Voices", Justification::centred, 10.0f);
     }
-    small(R(270, 272.5f, 335, 284.5f), String::fromUTF8("\xe2\x97\x80  Page/Select  \xe2\x96\xb6"), Justification::centred);
-    small(R(410, 272.5f, 462, 284.5f), "-   Value   +", Justification::centred);
+    small(R(270, 281, 335, 293), String::fromUTF8("\xe2\x97\x80  Page/Select  \xe2\x96\xb6"), Justification::centred);
+    small(R(402, 281, 452, 293), "-   Value   +", Justification::centred);
     /* ARP */
     under(487, 165, "Gate");
     underB(487, 228, "Key Latch");
@@ -1316,7 +1316,7 @@ void Panel::paintBackground(juce::Graphics &g, float sc)
     {
         const char *EN[4] = {"Attack", "Decay", "Sustain", "Release"};
         for (int i = 0; i < 4; i++) {
-            small(Rectangle<float>(X(592.0f + 42.0f * (float)i) - 40.0f, Y(290), 80.0f, 16.0f), EN[i], Justification::centred, LS + 1.5f);
+            small(Rectangle<float>(X(592.4f + 40.7f * (float)i) - 40.0f, Y(290), 80.0f, 16.0f), EN[i], Justification::centred, LS + 1.5f);
             small(Rectangle<float>(X(808.0f + 42.0f * (float)i) - 40.0f, Y(290), 80.0f, 16.0f), EN[i], Justification::centred, LS + 1.5f);
         }
         small(Rectangle<float>(X(765), Y(238) - 7.0f, 20.0f, 14.0f), "1");
