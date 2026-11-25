@@ -18,7 +18,7 @@
 //   278, 279       ANIMATE 1, ANIMATE 2
 //   280            ANIMATE HOLD
 //   281            the display's row (for the SCREEN page: which parameter the data knob and VALUE change)
-//   282, 283       VALUE - and + (keys: a press, one step)
+//   282, 283       VALUE - and + (keys: held, the parameter to step + 1; a press, one step)
 //   284            INITIALISE (a key: the Init Patch)
 //   285            AUDITION (a key: middle C while held)
 //   286            the patch (the factory patches: loaded when it changes)
@@ -90,8 +90,8 @@ public:
         addParam(mpc::boolParam("anim2", "Animate 2", false));
         addParam(mpc::boolParam("hold", "Anim Hold", false));
         addParam(mpc::intParam("target", "Screen Row", 0, NTARGET - 1, 0));
-        addParam(mpc::boolParam("vdec", "Value -", false));
-        addParam(mpc::boolParam("vinc", "Value +", false));
+        addParam(mpc::intParam("vdec", "Value -", 0, NTARGET, 0));   /* (held: the row's parameter + 1; 0 let go) */
+        addParam(mpc::intParam("vinc", "Value +", 0, NTARGET, 0));
         addParam(mpc::boolParam("init", "Initialise", false));
         addParam(mpc::boolParam("audition", "Audition", false));
         {
@@ -266,9 +266,9 @@ private:
         set(i, plain);
         notifyHostParameterChanged(i);
     }
-    void step(int d)
+    void step(int t, int d)
     {
-        int t = mpc::clamp(getInt(kTarget), 0, NTARGET - 1);
+        t = mpc::clamp(t, 0, NTARGET - 1);
         int i = t < NPARAM ? kP + t : t == NPARAM ? kVoices : t == NPARAM + 1 ? kQuality : kProg;
         const mpc::Param &q = param(i);
         changeTo(i, (float)mpc::clamp(getInt(i) + d, (int)std::lround(q.toPlain(0.0f)), (int)std::lround(q.toPlain(1.0f))));
@@ -282,7 +282,8 @@ private:
     }
     void keys()
     {
-        bool vd = getBool(kVDec), vi = getBool(kVInc), in = getBool(kInit), pd = getBool(kPDec), pi = getBool(kPInc);
+        int vd = getInt(kVDec), vi = getInt(kVInc);
+        bool in = getBool(kInit), pd = getBool(kPDec), pi = getBool(kPInc);
         int pr = getInt(kProg), rv = getInt(kRvType);
         bool au = getBool(kAudition);
         if (au != auditioning) {
@@ -303,10 +304,10 @@ private:
             resync = false;
             return;
         }
-        if (vd && !vdSeen)
-            step(-1);
-        if (vi && !viSeen)
-            step(1);
+        if (vd && vd != vdSeen)
+            step(vd - 1, -1);
+        if (vi && vi != viSeen)
+            step(vi - 1, 1);
         if (pd && !pdSeen)
             changeTo(kProg, (float)((pr + NFACTORY - 1) % NFACTORY));
         if (pi && !piSeen)
@@ -379,8 +380,8 @@ private:
     int16_t sent[NPARAM] = {};
     bool all = true, holdSent = false, anim1Sent = false, anim2Sent = false;
     float lastGain = -1.0f;
-    bool resync = true, vdSeen = false, viSeen = false, inSeen = false, pdSeen = false, piSeen = false, auditioning = false;
-    int progSeen = 0, rvSeen = 1;
+    bool resync = true, inSeen = false, pdSeen = false, piSeen = false, auditioning = false;
+    int progSeen = 0, rvSeen = 1, vdSeen = 0, viSeen = 0;
 };
 
 } // namespace

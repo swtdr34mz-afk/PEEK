@@ -341,17 +341,16 @@ int main(int argc, char **argv)
     {
         p.d(effSetProgram, 0, 0);
         render(p, 2048, {}, {256});
-        p.e->setParameter(p.e, 281, 0.0f);                 /* the row: the patch's first parameter (MPC 1) */
         p.e->setParameter(p.e, 1, 0.0f);
         render(p, 512, {}, {256});
-        auto press = [&](int i) {
-            p.e->setParameter(p.e, i, 1.0f);
+        auto press = [&](int i, float on = 1.0f) {
+            p.e->setParameter(p.e, i, on);
             render(p, 512, {}, {256});
             p.e->setParameter(p.e, i, 0.0f);
             render(p, 512, {}, {256});
         };
-        press(283);
-        press(283);
+        press(283, 1.0f / (float)(275 + 3));         /* VALUE + held on the row of parameter 0: 0 + 1 */
+        press(283, 1.0f / (float)(275 + 3));
         bool up = p.e->getParameter(p.e, 1) > 0.0f;
         float before = p.e->getParameter(p.e, 286);
         press(288);

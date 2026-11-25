@@ -19,6 +19,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "ui/PixelFont.h"
+#include <map>
 
 using namespace juce;
 using namespace pkui;
@@ -83,6 +84,8 @@ Range rangeOf(const String &id)
     }
     if (id == "target")
         return {0, NTARGET - 1, {}};
+    if (id == "vinc" || id == "vdec")
+        return {0, NTARGET, {}};
     return {0, 1, {"Off", "On"}};        /* (the switches and momentary keys) */
 }
 int targetOf(const String &id)
@@ -103,13 +106,13 @@ Cond when(const String &id, int a, int b = -1)
 }
 
 struct Ctl {
-    enum Kind { knob, fader, button, leds, image, label } kind;
+    enum Kind { knob, fader, button, leds, image, value } kind;
     String id;                           /* the parameter ("" for a local handle: see local) */
     Rectangle<float> r;                  /* on the page */
     /* knobs */
     bool big = false, endless = false;
     /* buttons: how a press changes the value (cycle: the next; toggle; momentary: on while held; set: to `set`) */
-    enum Mode { cycle, toggle, momentary, set, still } mode = toggle;
+    enum Mode { cycle, toggle, momentary, set, pulse } mode = toggle;   /* pulse: a key that sets `set` while held */
     BtnStyle style = BtnStyle::rubber;
     std::vector<int> next;               /* cycle: the value after each (empty: + 1) */
     int setTo = 0;
@@ -122,8 +125,8 @@ struct Ctl {
     float lw = 0.0f;
     /* images (shown only): the picture */
     Image pic;
-    /* labels: the value's text */
-    float textH = 0.0f;
+    /* values: the display's dot size */
+    float dot = 0.0f;
     Justification just = Justification::centredRight;
     std::vector<Cond> show;
     int q = -1;                          /* its Q-Link: 0..15, the top row first */
@@ -200,7 +203,7 @@ struct Builder {
             int col = 0;
             for (auto *id : r) {
                 for (auto &c : pg.ctls)
-                    if (c.id == id && c.kind != Ctl::label && c.kind != Ctl::image && c.q < 0) {
+                    if (c.id == id && c.kind != Ctl::value && c.kind != Ctl::image && c.q < 0) {
                         c.q = row * 4 + col;
                         break;
                     }
@@ -211,9 +214,12 @@ struct Builder {
     }
 };
 
+void bottomControls(Builder &b);
+
 Page oscPage()
 {
     Builder b("OSC", 0, 48, 306, 570, 545);
+    bottomControls(b);
     for (int k = 0; k < 3; k++) {
         String o = "o" + String(k + 1);
         float oy = 80.0f * (float)k;
@@ -247,6 +253,7 @@ Page oscPage()
 Page filterPage()
 {
     Builder b("FILTER", 1, 572, 306, 957, 545);
+    bottomControls(b);
     b.K(598, 338, "flfo1");
     b.K(654, 338, "fosc3");
     b.K(709, 338, "keytrk");
@@ -284,6 +291,7 @@ Page filterPage()
 Page envPage()
 {
     Builder b("ENV", 2, 462, 114, 957, 303);
+    bottomControls(b);
     b.K(487, 165, "arp_gate");
     b.B(487, 228, "arp_latch", Ctl::toggle, BtnStyle::pale, 56, 26);
     b.B(487, 265, "arp_on", Ctl::toggle, BtnStyle::pale, 56, 26);
@@ -376,25 +384,55 @@ void pix(Graphics &g, const String &t, float x, float y, float d, bool bold)
         }
         x += (bold ? 7.0f : 6.0f) * d;
     }
-    g.setColour(col::oled.withAlpha(0.16f));
-    for (auto &q : dots)
-        g.fillRect(q.expanded(d * 0.22f));
     g.setColour(col::oled);
     g.fillRectList(dots);
 }
 
+/* the bottom strip of every page: VOICES (8 / 16) and QUALITY (ECO / HIGH), each a key and its two LEDs */
+void bottomControls(Builder &b)
+{
+    for (int k = 0; k < 2; k++) {
+        String id = k ? "quality" : "voices";
+        float x = k ? 800.0f : 470.0f;
+        Ctl c{Ctl::button, id, Rectangle<float>(48.0f, 24.0f).withCentre({x, 603.0f})};
+        c.mode = Ctl::cycle;
+        b.add(c);
+        Ctl l{Ctl::leds, id, {}};
+        l.pts = {{{x + 52.0f, 596.0f}, 0}, {{x + 52.0f, 612.0f}, 1}};
+        l.lw = 20.0f;
+        b.add(l);
+    }
+    b.pg.extra.push_back([](Graphics &g) {
+        g.setColour(col::legend);
+        g.setFont(font(Face::label, 14.0f));
+        g.drawText("VOICES", Rectangle<float>(330.0f, 591.0f, 110.0f, 24.0f), Justification::centredRight, false);
+        g.drawText("8 VOICE", Rectangle<float>(536.0f, 588.0f, 90.0f, 16.0f), Justification::centredLeft, false);
+        g.drawText("16 VOICE", Rectangle<float>(536.0f, 604.0f, 90.0f, 16.0f), Justification::centredLeft, false);
+        g.drawText("QUALITY", Rectangle<float>(660.0f, 591.0f, 110.0f, 24.0f), Justification::centredRight, false);
+        g.drawText("ECO (2x)", Rectangle<float>(866.0f, 588.0f, 90.0f, 16.0f), Justification::centredLeft, false);
+        g.drawText("HIGH (4x)", Rectangle<float>(866.0f, 604.0f, 90.0f, 16.0f), Justification::centredLeft, false);
+    });
+}
+
+/* The display. One UI-only value (the MPC remembers it, no parameter of the plugin): the page shown and its row
+ * picked, 3 x page + row. The menu buttons and PAGE set it to a page's first row, the row keys to their row. Shown
+ * by it, each with a single condition: each page's picture (its title, its rows' names), its rows' values (each a
+ * control: touched and dragged it changes, a double tap opens the MPC's editor), the data knob and VALUE - / + of
+ * the row picked. */
 Page screenPage(PeekPanel &panel, std::vector<Screen> &scr)
 {
     Builder b("SCREEN", 3, 48, 114, 460, 303);
-    const int NS = (int)scr.size();
-    const String LS = "Local/" + String(NS) + "/screen";
-    auto onScreen = [&](int k) { return Cond{LS, k, k, NS}; };
+    bottomControls(b);
+    const int NS = (int)scr.size(), NSEL = NS * 3;
+    const String LS = "Local/" + String(NSEL) + "/sel";
+    auto onScreen = [&](int k) { return Cond{LS, k * 3, k * 3 + 2, NSEL}; };
+    auto onRow = [&](int k, int i) { return Cond{LS, k * 3 + i, k * 3 + i, NSEL}; };
     /* MASTER, ANIMATE */
     b.K(80, 150, "volume");
     b.B(79, 230, "anim1", Ctl::momentary, BtnStyle::pale, 44, 40).text = "1";
     b.B(79, 256, "anim2", Ctl::momentary, BtnStyle::pale, 44, 40).text = "2";
     b.B(79, 282, "hold", Ctl::toggle, BtnStyle::rubber, 40, 16);
-    /* PATCH: INITIALISE, AUDITION; the patch knob, - and +; (COMPARE and SAVE: the MPC keeps its programs itself) */
+    /* PATCH: INITIALISE, AUDITION; the patch knob, - and + (COMPARE and SAVE: the MPC keeps its programs itself) */
     b.B(131.5f, 141, "init", Ctl::momentary);
     b.B(131.5f, 171, "audition", Ctl::momentary);
     b.K(149, 222, "prog");
@@ -417,85 +455,94 @@ Page screenPage(PeekPanel &panel, std::vector<Screen> &scr)
         if (first < 0)
             continue;
         for (int part = 0; part < 3; part++) {   /* lit within its pages; unlit before and after them */
-            int a = part == 0 ? first : part == 1 ? 0 : last + 1, z = part == 0 ? last : part == 1 ? first - 1 : NS - 1;
+            int a = part == 0 ? first * 3 : part == 1 ? 0 : last * 3 + 3, z = part == 0 ? last * 3 + 2 : part == 1 ? first * 3 - 1 : NSEL - 1;
             if (a > z)
                 continue;
             auto &c = b.B(mb[(size_t)i].x, mb[(size_t)i].y, "", Ctl::set, BtnStyle::pale, 56, 26);
             c.local = LS;
-            c.localSteps = NS;
-            c.setTo = first;
+            c.localSteps = NSEL;
+            c.setTo = first * 3;
             c.litAlways = part == 0;
             c.litNever = part != 0;
-            c.show = {Cond{LS, a, z, NS}};
+            c.show = {Cond{LS, a, z, NSEL}};
         }
     }
-    /* the display: each page's picture (its title, its rows' names) and its rows' values (the MPC's own text) */
+    /* the display */
     auto oled = Rectangle<float>(PX(226), PY(196), PX(372) - PX(226), PY(260) - PY(196));
     auto o = Rectangle<float>(b.pg.off.x + (oled.getX() - b.pg.region.getX()) * b.pg.s,
                               b.pg.off.y + (oled.getY() - b.pg.region.getY()) * b.pg.s, oled.getWidth() * b.pg.s,
-                              oled.getHeight() * b.pg.s);
+                              oled.getHeight() * b.pg.s).toNearestInt().toFloat();
     auto in = o.reduced(8.0f * b.pg.s, 6.0f * b.pg.s);
-    const float d = in.getHeight() / 44.0f, lh = 11.0f * d;
+    const float d = std::floor(in.getHeight() / 44.0f), lh = 11.0f * d;   /* (whole pixels: crisp dots) */
+    const int cols = (int)((in.getWidth() + d) / (6.0f * d));
     for (int k = 0; k < NS; k++) {
         auto &s = scr[(size_t)k];
-        Image img(Image::RGB, (int)std::ceil(o.getWidth()), (int)std::ceil(o.getHeight()), true);
+        Image img(Image::RGB, (int)o.getWidth(), (int)o.getHeight(), true);
         {
             Graphics g(img);
             g.fillAll(Colours::black);
             g.addTransform(AffineTransform::translation(-o.getX(), -o.getY()));
             String pn = String(s.index + 1) + "/" + String(s.count);
-            pix(g, s.title.toUpperCase().substring(0, 13), in.getX(), in.getY() + d, d, true);
+            pix(g, s.title.toUpperCase().substring(0, jmax(0, (cols * 6) / 7 - pn.length() - 1)), in.getX(), in.getY() + d, d, true);
             pix(g, pn, in.getRight() - pixWidth(pn, d, false), in.getY() + d, d, false);
             for (size_t i = 0; i < s.rows.size(); i++) {
                 auto &r = s.rows[i];
                 float y = in.getY() + lh * (float)(i + 1) + d;
                 if (r.ids.size() == 2) {
-                    pix(g, "A:", in.getX(), y, d, false);
-                    pix(g, "B:", in.getCentreX() + 4.0f * d, y, d, false);
+                    pix(g, "A", in.getX(), y, d, false);
+                    pix(g, "B", in.getCentreX() + 2.0f * d, y, d, false);
                 } else
-                    pix(g, r.label, in.getX(), y, d, false);
+                    pix(g, r.label.substring(0, 10), in.getX(), y, d, false);
             }
         }
         Ctl c{Ctl::image, "", o};
         c.pic = img;
         c.show = {onScreen(k)};
         b.add(c);
+        /* the values: each a control (its picture the value in the display's dots) */
         for (size_t i = 0; i < s.rows.size(); i++) {
             auto &r = s.rows[i];
             auto lr = Rectangle<float>(in.getX(), in.getY() + lh * (float)(i + 1), in.getWidth(), lh);
             for (int j = 0; j < r.ids.size(); j++) {
-                Ctl v{Ctl::label, r.ids[j], r.ids.size() == 2 ? (j == 0 ? lr.withTrimmedLeft(14.0f * d).withWidth(lr.getWidth() * 0.5f - 16.0f * d)
-                                                                         : lr.withTrimmedLeft(lr.getWidth() * 0.5f + 16.0f * d))
-                                                             : lr.withTrimmedLeft(lr.getWidth() * 0.45f)};
-                v.textH = lh * 0.82f;
-                v.just = r.ids.size() == 2 ? Justification::centredLeft : Justification::centredRight;
+                bool two = r.ids.size() == 2;
+                auto vr = two ? (j == 0 ? Rectangle<float>(lr.getX() + 8.0f * d, lr.getY(), lr.getWidth() * 0.5f - 10.0f * d, lh)
+                                        : Rectangle<float>(lr.getCentreX() + 10.0f * d, lr.getY(), lr.getRight() - lr.getCentreX() - 10.0f * d, lh))
+                              : Rectangle<float>(lr.getX() + 66.0f * d, lr.getY(), lr.getWidth() - 66.0f * d, lh);
+                Ctl v{Ctl::value, r.ids[j], vr.toNearestInt().toFloat()};
+                v.dot = d;
+                v.just = two ? Justification::centredLeft : Justification::centredRight;
                 v.show = {onScreen(k)};
                 b.add(v);
             }
         }
     }
-    /* the row buttons: each picks its row (the parameter the data knob and VALUE change) */
+    /* the row keys: each picks its row (lit while it is the one) */
+    for (int k = 0; k < NS; k++)
+        for (size_t i = 0; i < 3; i++) {
+            bool has = i < scr[(size_t)k].rows.size() && !scr[(size_t)k].rows[i].ids.isEmpty();
+            if (!has)
+                continue;
+            auto &c = b.B(206, 205.0f + 19.0f * (float)i, "", Ctl::set, BtnStyle::rubber, 50, 24);
+            c.local = LS;
+            c.localSteps = NSEL;
+            c.setTo = k * 3 + (int)i;
+            c.show = {onScreen(k)};
+        }
+    /* the data knob and VALUE - / + of the row picked */
     for (int k = 0; k < NS; k++)
         for (size_t i = 0; i < scr[(size_t)k].rows.size(); i++) {
             auto &r = scr[(size_t)k].rows[i];
             if (r.ids.isEmpty())
                 continue;
-            auto &c = b.B(206, 205.0f + 19.0f * (float)i, "target", Ctl::set, BtnStyle::rubber, 50, 24);
-            c.setTo = targetOf(r.ids[0]);
-            c.show = {onScreen(k)};
-        }
-    /* the data knob and VALUE - / +: on the row picked, while it is on the page shown */
-    for (int k = 0; k < NS; k++)
-        for (auto &r : scr[(size_t)k].rows)
-            for (auto &id : r.ids) {
-                std::vector<Cond> sh = {onScreen(k), Cond{H("target"), targetOf(id), targetOf(id), NTARGET}};
-                auto &kn = b.K(427, 224, id, sh, 70.0f);
-                kn.endless = true;
-                auto &dn = b.B(412, 274, "vdec", Ctl::momentary, BtnStyle::rubber, 50, 24);
-                dn.show = sh;
-                auto &up = b.B(442, 274, "vinc", Ctl::momentary, BtnStyle::rubber, 50, 24);
-                up.show = sh;
+            String id = r.ids[0];
+            auto &kn = b.K(427, 224, id, {onRow(k, (int)i)}, 70.0f);
+            kn.endless = true;
+            for (int dir = 0; dir < 2; dir++) {      /* (a press: the plugin steps parameter `set` - 1) */
+                auto &c = b.B(dir ? 442.0f : 412.0f, 274, dir ? "vinc" : "vdec", Ctl::pulse, BtnStyle::rubber, 50, 24);
+                c.setTo = targetOf(id) + 1;
+                c.show = {onRow(k, (int)i)};
             }
+        }
     /* PAGE: the menu's other pages */
     for (int k = 0; k < NS; k++) {
         auto &s = scr[(size_t)k];
@@ -504,16 +551,15 @@ Page screenPage(PeekPanel &panel, std::vector<Screen> &scr)
             int to = first + (s.index + (dir ? 1 : s.count - 1)) % s.count;
             auto &c = b.B(dir ? 320.0f : 285.0f, 274, "", Ctl::set, BtnStyle::pale, 56, 24);
             c.local = LS;
-            c.localSteps = NS;
-            c.setTo = to;
+            c.localSteps = NSEL;
+            c.setTo = to * 3;
             c.litNever = true;
             c.show = {onScreen(k)};
         }
     }
-    /* what never changes on the MPC, drawn on the background: COMPARE and SAVE, the row buttons, PAGE, VALUE, the
-       data knob (each covered while it works), the active voices' LEDs */
-    auto pgp = b.pg;
-    b.pg.extra.push_back([pgp, d](Graphics &g) {
+    /* drawn on the background: COMPARE and SAVE, the keys and the data knob where nothing covers them, the active
+       voices' LEDs */
+    b.pg.extra.push_back([](Graphics &g) {
         Builder bb("", 0, 48, 114, 460, 303);
         for (auto p : std::vector<Point<float>>{{166.5f, 141}, {166.5f, 171}})
             drawButton(g, bb.box(p.x, p.y, 52, 26).reduced(bb.sz(1), bb.sz(2)), BtnStyle::rubber, false, false, false);
@@ -526,7 +572,6 @@ Page screenPage(PeekPanel &panel, std::vector<Screen> &scr)
         drawKnobPointer(g, kr, 0.0f, true);
         for (int i = 0; i < 8; i++)
             drawLed(g, bb.at(407.3f + 13.2f * (float)(i % 4), i < 4 ? 148.0f : 159.0f), bb.sz(17.0f), 0.0f);
-        (void)d;
     });
     b.Q({{"volume"}});
     (void)panel;
@@ -559,6 +604,19 @@ Image background(PeekPanel &panel, const Page &pg)
     return img;
 }
 
+String valueText(const String &id, int v)
+{
+    int p = paramIndex(id);
+    if (p >= 0) {
+        char t[48];
+        paramText(p, v, t, sizeof t);
+        return String(t);
+    }
+    auto r = rangeOf(id);
+    if (r.names.isEmpty())
+        return String(v);
+    return r.names[jlimit(0, r.names.size() - 1, v - r.lo)];
+}
 /* a control's picture at a value (LEDs: the LED `row`, lit or not) */
 void paintCtl(Graphics &g, const Ctl &c, int v, int row = -1, bool lit = false)
 {
@@ -580,6 +638,14 @@ void paintCtl(Graphics &g, const Ctl &c, int v, int row = -1, bool lit = false)
         }
     } else if (c.kind == Ctl::leds) {
         drawLed(g, c.pts[(size_t)row].first, c.lw, lit ? 1.0f : 0.0f);
+    } else if (c.kind == Ctl::value) {
+        g.setColour(Colours::black);
+        g.fillRect(c.r);
+        String t = valueText(c.id, v);
+        int n = (int)((c.r.getWidth() + c.dot) / (6.0f * c.dot));
+        t = t.substring(0, n);
+        float w = pixWidth(t, c.dot, false);
+        pix(g, t, c.just == Justification::centredRight ? c.r.getRight() - w : c.r.getX(), c.r.getY() + c.dot, c.dot, false);
     }
 }
 
@@ -650,7 +716,7 @@ int main(int argc, char **argv)
             for (auto &c : pg.ctls) {
                 bool shown = true;
                 for (auto &cd : c.show) {
-                    int v = cd.h.startsWith("Local") ? 0 : cd.h == H("target") ? 0 : -1;
+                    int v = cd.h.startsWith("Local") ? String(std::getenv("PEEK_SEL") ? std::getenv("PEEK_SEL") : "0").getIntValue() : -1;
                     if (v < 0) {
                         for (int i = 0; i < NPARAM; i++)
                             if (cd.h == H(PARAM[i].id))
@@ -667,16 +733,9 @@ int main(int argc, char **argv)
                 else if (c.kind == Ctl::button)
                     paintCtl(g, c, v, -1, c.litAlways || (!c.litNever && c.mode == Ctl::toggle && v > 0));
                 else if (c.kind == Ctl::image)
-                    g.drawImageAt(c.pic, (int)c.r.getX(), (int)c.r.getY());
-                else if (c.kind == Ctl::label) {
-                    auto rg = rangeOf(c.id);
-                    int p = paramIndex(c.id);
-                    char t[48] = "";
-                    if (p >= 0)
-                        paramText(p, v, t, sizeof t);
-                    g.setColour(col::oled);
-                    g.setFont(FontOptions(c.textH * 0.9f));
-                    g.drawText(p >= 0 ? String(t) : rg.names[jlimit(0, rg.names.size() - 1, v - rg.lo)], c.r, c.just, false);
+                    g.setOpacity(1.0f), g.drawImageAt(c.pic, (int)c.r.getX(), (int)c.r.getY());
+                else if (c.kind == Ctl::value) {
+                    paintCtl(g, c, v);
                 } else
                     paintCtl(g, c, v);
             }
@@ -747,7 +806,7 @@ int main(int argc, char **argv)
                 o->setProperty("off", off);
                 /* how it acts: a toggle; a key held; to a value (a radio button); a step to the next value (one
                    picture a value, each shown while the value is its own) */
-                String mode = c.mode == Ctl::cycle ? "cycle" : c.mode == Ctl::momentary ? "momentary" : c.mode == Ctl::set ? "set" : "toggle";
+                String mode = c.mode == Ctl::cycle ? "cycle" : c.mode == Ctl::momentary ? "momentary" : c.mode == Ctl::set ? "set" : c.mode == Ctl::pulse ? "pulse" : "toggle";
                 o->setProperty("mode", mode);
                 o->setProperty("set", c.setTo);
                 if (c.mode == Ctl::cycle) {
@@ -779,11 +838,32 @@ int main(int argc, char **argv)
                 o->setProperty("kind", "image");
                 o->setProperty("rect", rectVar(c.r.getSmallestIntegerContainer().withSize(c.pic.getWidth(), c.pic.getHeight())));
                 o->setProperty("image", f);
-            } else {
-                o->setProperty("kind", "label");
-                o->setProperty("rect", rectVar(c.r.getSmallestIntegerContainer()));
-                o->setProperty("height", c.textH);
-                o->setProperty("right", c.just == Justification::centredRight);
+            } else {                     /* a display value: a film strip of its texts (the same texts: one picture) */
+                auto r = c.r.getSmallestIntegerContainer();
+                static std::map<String, String> made;
+                String key = String(r.getWidth()) + "x" + String(r.getHeight()) + (c.just == Justification::centredRight ? "R" : "L");
+                for (int v = rg.lo; v <= rg.hi; v++)
+                    key << "|" << valueText(c.id, v);
+                String f;
+                if (made.count(key))
+                    f = made[key];
+                else {
+                    f = "screen_value_" + String((int)made.size()).paddedLeft('0', 3) + ".png";
+                    Image strip(Image::RGB, r.getWidth(), r.getHeight() * steps, true);
+                    {
+                        Graphics sg(strip);
+                        for (int v = 0; v < steps; v++)
+                            sg.drawImageAt(cut(bg, r, [&](Graphics &g) { paintCtl(g, c, rg.lo + v); }), 0, v * r.getHeight());
+                    }
+                    writePng(strip, dir.getChildFile(f));
+                    made[key] = f;
+                }
+                o->setProperty("kind", "knob");
+                o->setProperty("bipolar", rg.lo < 0);
+                o->setProperty("rect", rectVar(r));
+                o->setProperty("frames", steps);
+                o->setProperty("strip", f);
+                o->setProperty("vertical", false);
             }
             list.add(var(o));
         }

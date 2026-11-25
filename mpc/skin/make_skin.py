@@ -175,6 +175,8 @@ def main(argv):
                 else:
                     if mode == "momentary":
                         hh, bid, n, g = "ResetOnGestureEnd/" + h, 1, 1, "Hold"
+                    elif mode == "pulse":        # (a key that sets its value while held: VALUE - / + of one row)
+                        hh, bid, n, g = "ResetOnGestureEnd/" + h, c["set"], steps, "Hold"
                     elif mode == "set":
                         hh, bid, n, g = h, c["set"], steps, "Instant"
                     else:
