@@ -702,7 +702,7 @@ int main(int argc, char **argv)
             o->setProperty("names", c.local.isNotEmpty() ? Array<var>() : names);
             if (c.kind == Ctl::knob || c.kind == Ctl::fader) {
                 auto r = c.r.expanded(3.0f).getSmallestIntegerContainer();
-                int frames = c.endless ? 64 : jmax(2, jmin(steps, 128));   /* (the data knob: one picture for all) */
+                int frames = c.endless ? 64 : jmax(2, jmin(steps, 128, 16000 / (r.getHeight() + 1)));   /* (the data knob: one picture for all; a strip under 16384 px) */
                 static bool dataDone = false;
                 if (c.endless && dataDone) {
                     o->setProperty("kind", "knob");
