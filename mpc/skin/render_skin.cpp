@@ -414,19 +414,16 @@ void bottomControls(Builder &b)
     });
 }
 
-/* The display. One UI-only value (the MPC remembers it, no parameter of the plugin): the page shown and its row
- * picked, 3 x page + row. The menu buttons and PAGE set it to a page's first row, the row keys to their row. Shown
- * by it, each with a single condition: each page's picture (its title, its rows' names), its rows' values (each a
- * control: touched and dragged it changes, a double tap opens the MPC's editor), the data knob and VALUE - / + of
- * the row picked. */
+/* The display, large in the lower part of the MENU. One UI-only value (the MPC remembers it, no parameter of the
+ * plugin): the page shown; the menu buttons set it. Shown by it: each page's picture (its title, its rows' names) and
+ * its rows' values, each a control (touched and dragged it changes, a double tap opens the MPC's editor). */
 Page screenPage(PeekPanel &panel, std::vector<Screen> &scr)
 {
     Builder b("SCREEN", 3, 48, 114, 460, 303);
     bottomControls(b);
-    const int NS = (int)scr.size(), NSEL = NS * 3;
-    const String LS = "Local/" + String(NSEL) + "/sel";
-    auto onScreen = [&](int k) { return Cond{LS, k * 3, k * 3 + 2, NSEL}; };
-    auto onRow = [&](int k, int i) { return Cond{LS, k * 3 + i, k * 3 + i, NSEL}; };
+    const int NS = (int)scr.size();
+    const String LS = "Local/" + String(NS) + "/screen";
+    auto onScreen = [&](int k) { return Cond{LS, k, k, NS}; };
     /* MASTER, ANIMATE */
     b.K(80, 150, "volume");
     b.B(79, 230, "anim1", Ctl::momentary, BtnStyle::pale, 44, 40).text = "1";
@@ -438,7 +435,8 @@ Page screenPage(PeekPanel &panel, std::vector<Screen> &scr)
     b.K(149, 222, "prog");
     b.B(131.5f, 270, "pdec", Ctl::momentary);
     b.B(166.5f, 270, "pinc", Ctl::momentary);
-    /* MENU: a menu button each, lit while one of its pages is shown */
+    /* MENU: a menu button each; pressed, its first page; pressed again while it is open, its next page (as the
+       Peak's menu buttons); lit while one of its pages is shown */
     std::vector<Point<float>> mb = {{207, 160}};
     for (int i = 0; i < 8; i++)
         mb.push_back({262.0f + 38.0f * (float)(i % 4), i < 4 ? 133.0f : 158.0f});
@@ -454,21 +452,28 @@ Page screenPage(PeekPanel &panel, std::vector<Screen> &scr)
             }
         if (first < 0)
             continue;
-        for (int part = 0; part < 3; part++) {   /* lit within its pages; unlit before and after them */
-            int a = part == 0 ? first * 3 : part == 1 ? 0 : last * 3 + 3, z = part == 0 ? last * 3 + 2 : part == 1 ? first * 3 - 1 : NSEL - 1;
+        for (int part = 0; part < 2; part++) {   /* unlit before and after its pages */
+            int a = part == 0 ? 0 : last + 1, z = part == 0 ? first - 1 : NS - 1;
             if (a > z)
                 continue;
             auto &c = b.B(mb[(size_t)i].x, mb[(size_t)i].y, "", Ctl::set, BtnStyle::pale, 56, 26);
             c.local = LS;
-            c.localSteps = NSEL;
-            c.setTo = first * 3;
-            c.litAlways = part == 0;
-            c.litNever = part != 0;
-            c.show = {Cond{LS, a, z, NSEL}};
+            c.localSteps = NS;
+            c.setTo = first;
+            c.litNever = true;
+            c.show = {Cond{LS, a, z, NS}};
+        }
+        for (int k = first; k <= last; k++) {    /* lit on each of its pages; pressed: the next */
+            auto &c = b.B(mb[(size_t)i].x, mb[(size_t)i].y, "", Ctl::set, BtnStyle::pale, 56, 26);
+            c.local = LS;
+            c.localSteps = NS;
+            c.setTo = k == last ? first : k + 1;
+            c.litAlways = true;
+            c.show = {onScreen(k)};
         }
     }
     /* the display */
-    auto oled = Rectangle<float>(PX(226), PY(196), PX(372) - PX(226), PY(260) - PY(196));
+    auto oled = Rectangle<float>(PX(196), PY(184), PX(452) - PX(196), PY(298) - PY(184));   /* (large, in the lower part of the MENU) */
     auto o = Rectangle<float>(b.pg.off.x + (oled.getX() - b.pg.region.getX()) * b.pg.s,
                               b.pg.off.y + (oled.getY() - b.pg.region.getY()) * b.pg.s, oled.getWidth() * b.pg.s,
                               oled.getHeight() * b.pg.s).toNearestInt().toFloat();
@@ -516,60 +521,11 @@ Page screenPage(PeekPanel &panel, std::vector<Screen> &scr)
             }
         }
     }
-    /* the row keys: each picks its row (lit while it is the one) */
-    for (int k = 0; k < NS; k++)
-        for (size_t i = 0; i < 3; i++) {
-            bool has = i < scr[(size_t)k].rows.size() && !scr[(size_t)k].rows[i].ids.isEmpty();
-            if (!has)
-                continue;
-            auto &c = b.B(206, 205.0f + 19.0f * (float)i, "", Ctl::set, BtnStyle::rubber, 50, 24);
-            c.local = LS;
-            c.localSteps = NSEL;
-            c.setTo = k * 3 + (int)i;
-            c.show = {onScreen(k)};
-        }
-    /* the data knob and VALUE - / + of the row picked */
-    for (int k = 0; k < NS; k++)
-        for (size_t i = 0; i < scr[(size_t)k].rows.size(); i++) {
-            auto &r = scr[(size_t)k].rows[i];
-            if (r.ids.isEmpty())
-                continue;
-            String id = r.ids[0];
-            auto &kn = b.K(427, 224, id, {onRow(k, (int)i)}, 70.0f);
-            kn.endless = true;
-            for (int dir = 0; dir < 2; dir++) {      /* (a press: the plugin steps parameter `set` - 1) */
-                auto &c = b.B(dir ? 442.0f : 412.0f, 274, dir ? "vinc" : "vdec", Ctl::pulse, BtnStyle::rubber, 50, 24);
-                c.setTo = targetOf(id) + 1;
-                c.show = {onRow(k, (int)i)};
-            }
-        }
-    /* PAGE: the menu's other pages */
-    for (int k = 0; k < NS; k++) {
-        auto &s = scr[(size_t)k];
-        int first = k - s.index;
-        for (int dir = 0; dir < 2; dir++) {
-            int to = first + (s.index + (dir ? 1 : s.count - 1)) % s.count;
-            auto &c = b.B(dir ? 320.0f : 285.0f, 274, "", Ctl::set, BtnStyle::pale, 56, 24);
-            c.local = LS;
-            c.localSteps = NSEL;
-            c.setTo = to * 3;
-            c.litNever = true;
-            c.show = {onScreen(k)};
-        }
-    }
-    /* drawn on the background: COMPARE and SAVE, the keys and the data knob where nothing covers them, the active
-       voices' LEDs */
+    /* drawn on the background: COMPARE and SAVE, the active voices' LEDs */
     b.pg.extra.push_back([](Graphics &g) {
         Builder bb("", 0, 48, 114, 460, 303);
         for (auto p : std::vector<Point<float>>{{166.5f, 141}, {166.5f, 171}})
             drawButton(g, bb.box(p.x, p.y, 52, 26).reduced(bb.sz(1), bb.sz(2)), BtnStyle::rubber, false, false, false);
-        for (int i = 0; i < 3; i++)
-            drawButton(g, bb.box(206, 205.0f + 19.0f * (float)i, 50, 24).reduced(bb.sz(1), bb.sz(2)), BtnStyle::rubber, false, false, false);
-        for (auto p : std::vector<Point<float>>{{412, 274}, {442, 274}})
-            drawButton(g, bb.box(p.x, p.y, 50, 24).reduced(bb.sz(1), bb.sz(2)), BtnStyle::rubber, false, false, false);
-        auto kr = bb.box(427, 224, 70, 70);
-        drawKnob(g, kr, false, true, false);
-        drawKnobPointer(g, kr, 0.0f, true);
         for (int i = 0; i < 8; i++)
             drawLed(g, bb.at(407.3f + 13.2f * (float)(i % 4), i < 4 ? 148.0f : 159.0f), bb.sz(17.0f), 0.0f);
     });

@@ -37,12 +37,12 @@ kann man auch direkt antippen. Wie im VST zeigt ein Knopf den gewählten Paramet
 Mod Env 1, LFO 1), ENV DEPTH Amp Env oder Mod Env 1, die LFO-RATE bei SYNC die Teilung, die Delay-TIME bei SYNC die
 Teilung, die MOD ENVELOPES die mit SELECT gewählte.
 
-**SCREEN**: Die Menütasten (Patch, Osc, Env, LFO, Arp/Clock, Mod, Voice, FX, Settings) öffnen dieselben Display-Seiten
-wie am VST, PAGE ◄ ► blättert. Jeder Wert im Display ist selbst ein Regler: antippen und ziehen, zweimal tippen öffnet
-den großen Regler (bei einer Auswahl die Liste). Eine Zeilentaste links wählt die Zeile (sie leuchtet); dann ändern
-der Datenknopf und VALUE − / + ihren Wert. Der Patch-Knopf und PATCH − / + wechseln den Werks-Patch, INITIALISE setzt
-den Init-Patch, AUDITION spielt ein C, solange man drückt. (COMPARE und SAVE haben auf der MPC keine Aufgabe: die MPC
-speichert ihre Programme selbst. Die Active-Voices-LEDs bleiben aus.)
+**SCREEN**: Das Display sitzt groß im MENU-Feld. Die Menütasten (Patch, Osc, Env, LFO, Arp/Clock, Mod, Voice, FX,
+Settings) öffnen dieselben Display-Seiten wie am VST; nochmal drücken zeigt die nächste Seite des Menüs (wie am Peak).
+Jeder Wert im Display ist selbst ein Regler: antippen und ziehen, zweimal tippen öffnet den großen Regler (bei einer
+Auswahl die Liste). Der Patch-Knopf und PATCH − / + wechseln den Werks-Patch, INITIALISE setzt den Init-Patch,
+AUDITION spielt ein C, solange man drückt. (COMPARE und SAVE haben auf der MPC keine Aufgabe: die MPC speichert ihre
+Programme selbst. Die Active-Voices-LEDs bleiben aus.)
 
 Unten auf jeder Seite: **VOICES** (8 oder 16 Stimmen) und **QUALITY** (ECO oder HIGH), je eine Taste und zwei LEDs.
 
