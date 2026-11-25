@@ -12,9 +12,10 @@ this places each picture where it was cut from, bound to the MPC plugin's parame
   buttons    a picture for each value; a tap switches it (ANIMATE 1 and 2: on while held)
   LED lists  each row a radio button
 
-The pages: six function keys, each with two pages (a second press: the other). On each page the 16 Q-Links turn the
-first eight knobs of the top band (the top two rows of Q-Links) and of the bottom band (the lower two rows). Standard
-library only (Pillow, if there, makes the pictures smaller).
+The pages: four function keys, as the Peak's panel: OSC, FILTER, ENV, SCREEN. The controls carry their MPC handles
+(the renderer's manifest says them) and when they are shown (one of two parameters on one knob; the display's pages).
+On each page the 16 Q-Links: each row of four Q-Links four knobs the renderer named. Standard library only (Pillow, if
+there, makes the pictures smaller).
 """
 import json
 import os
@@ -23,8 +24,10 @@ import sys
 
 # The MPC plugin's parameters (mpc/plugin/src/PeekMpc.cpp): 0 VOLUME, then the patch's 275, then PEEK's own
 NP = 275
-GLOBAL = {"volume": 0, "voices": 1 + NP, "quality": 2 + NP, "anim1": 3 + NP, "anim2": 4 + NP, "hold": 5 + NP}
-MOMENTARY = {"anim1", "anim2"}
+GLOBAL = {"volume": 0}
+for _i, _id in enumerate(["voices", "quality", "anim1", "anim2", "hold", "target", "vdec", "vinc", "init", "audition",
+                         "prog", "pdec", "pinc", "rvtype"]):
+    GLOBAL[_id] = 1 + NP + _i
 # Program (Track) mode: the knobs as the MPC's own program knobs, bottom left Q-Link 1
 PROGRAM_QLINKS = ["ch_level", "dl_level", "rv_level", "volume",
                   "aenv_att", "aenv_dec", "aenv_sus", "aenv_rel",
@@ -139,97 +142,108 @@ def main(argv):
 
     def tab_children(page):
         kids = [entry("panel", "Image", image_data(use(page["background"])), bounds((0, 0, 1280, 628)))]
-        boxes, legends = [], []
+        boxes = []
 
         for i, c in enumerate(page["controls"]):
-            idx = mpc(c["id"])
-            if c["names"]:
-                names[idx] = c["names"]
-            h = "Parameter %d" % idx
+            h, show = c["handle"], list(c["show"])
+            if c["names"] and h.startswith("Parameter "):
+                names[int(h.split()[1])] = c["names"]
+            hb = lambda extra=None: bounds(c["rect"], "No", show + (extra or []) or None, "Hide")
             if c["kind"] == "knob":
-                fr = c["frame"]
                 kx, ky, w, hh = c["rect"]
-                ox, oy = kx - fr[0], ky - fr[1]
                 ov = "menu overlay" if c["names"] else "knob overlay bipolar" if c["bipolar"] else "knob overlay"
-                name = "%s%d knob %d %s" % (page["name"].lower(), page["sub"], i, c["id"])
+                name = "%s knob %d %s" % (page["name"].lower(), i, c["id"])
                 knob = O(("version", 3), ("knobType", "FilmStrip"), ("filmStrip", use(c["strip"])), ("numFrames", c["frames"]),
                          ("invert", False), ("dragOrientation", "Vertical"), ("handleName", "Data"))
                 defs.append((name, component(
                     [action("Mouse Down", "Q-Link", "Data", ""), action("Double Click", "Show Overlay", "Data", ov),
                      action("Enter Pressed", "Show Overlay", "Data", ov)],
-                    [entry("knob", "Knob", knob, bounds((ox, oy, w, hh))),
+                    [entry("knob", "Knob", knob, bounds((0, 0, w, hh))),
                      entry("focus", "Focus", focus, O(("version", 1), ("acceptsHWFocus", "No"), ("showWhenDataModelInvalid", "Show"),
                                                       ("whenVisible", "WhenFocussed"), ("boundsType", "Absolute"),
-                                                      ("bounds", box((0, 0, fr[2], fr[3])))))])))
-                kids.append(entry(c["id"], name, O(("version", 1), ("handleName", "Data")), bounds(fr, "Yes"), [("Data", h)]))
-                boxes.append((c["id"], fr))
-                legends.append((c["id"], fr))
-            elif c["kind"] == "button":
-                rs = c["ranges"]
-                hb = ("ResetOnGestureEnd/" + h) if c["id"] in MOMENTARY else h
-                for r in rs:
-                    hide = [range_handle(r["a"], r["b"], c["steps"], h)] if len(rs) > 1 else None
-                    data = O(("version", 2), ("onImage", use(r["image"])), ("offImage", r["image"]), ("buttonId", r["next"]),
-                             ("numButtonsInGroup", c["steps"]), ("handleName", hb),
-                             ("gestureBehaviour", "Hold" if c["id"] in MOMENTARY else "Instant"))
-                    kids.append(entry(c["id"], "Button", data, bounds(c["rect"], "No", hide, "Hide")))
+                                                      ("bounds", box((0, 0, w, hh)))))])))
+                kids.append(entry(c["id"], name, O(("version", 1), ("handleName", "Data")),
+                                  bounds(c["rect"], "Yes", show or None, "Hide"), [("Data", h)]))
                 boxes.append((c["id"], c["rect"]))
-            else:
-                if len(c["rows"]) != c["steps"]:
-                    sys.exit("%s: %d LEDs for %d values" % (c["id"], len(c["rows"]), c["steps"]))
-                for k, row in enumerate(c["rows"]):
-                    data = O(("version", 2), ("onImage", use(row["on"])), ("offImage", use(row["off"])), ("buttonId", k),
+            elif c["kind"] == "button":
+                mode, steps = c["mode"], c["steps"]
+                if mode == "cycle":      # a picture a value, shown while the value is its own; a press: the next
+                    for v, nx in enumerate(c["next"]):
+                        data = O(("version", 2), ("onImage", use(c["off"])), ("offImage", c["off"]), ("buttonId", nx),
+                                 ("numButtonsInGroup", steps), ("handleName", h), ("gestureBehaviour", "Instant"))
+                        kids.append(entry(c["id"], "Button", data, hb(["IndexedEnabling/%d/%d/%s" % (v, steps, h)])))
+                else:
+                    if mode == "momentary":
+                        hh, bid, n, g = "ResetOnGestureEnd/" + h, 1, 1, "Hold"
+                    elif mode == "set":
+                        hh, bid, n, g = h, c["set"], steps, "Instant"
+                    else:
+                        hh, bid, n, g = h, 1, 1, "Instant"
+                    data = O(("version", 2), ("onImage", use(c["on"])), ("offImage", use(c["off"])), ("buttonId", bid),
+                             ("numButtonsInGroup", n), ("handleName", hh), ("gestureBehaviour", g))
+                    kids.append(entry(c["id"] or "local", "Button", data, hb()))
+                boxes.append((c["id"], c["rect"]))
+            elif c["kind"] == "leds":
+                for row in c["rows"]:
+                    data = O(("version", 2), ("onImage", use(row["on"])), ("offImage", use(row["off"])), ("buttonId", row["value"]),
                              ("numButtonsInGroup", c["steps"]), ("handleName", h), ("gestureBehaviour", "Instant"))
-                    kids.append(entry(c["id"], "Button", data, bounds(row["rect"])))
+                    kids.append(entry(c["id"], "Button", data, bounds(row["rect"], "No", show or None, "Hide")))
                     boxes.append((c["id"], row["rect"]))
-        return kids, boxes, legends
+            elif c["kind"] == "image":
+                kids.append(entry("display", "Image", image_data(use(c["image"])), hb()))
+            else:                        # the display's values: the MPC's own text
+                style = O(("version", 1), ("font", O(("version", 1), ("name", "Roboto"), ("style", "Regular"),
+                                                     ("height", round(c["height"], 1)))),
+                          ("colour", "ffd4e7fb"),
+                          ("justification", ("right" if c["right"] else "left") + " verticallyCentred"), ("case", "Original"))
+                data = O(("version", 1), ("textStyle", style), ("type", "Value"), ("handleName", h))
+                kids.append(entry(c["id"] + " value", "Label", data, hb()))
+        return kids, boxes
 
-    def frame(group, boxes, legends):
-        """The Q-Link group's frame: around its controls with their legends, with an even gap that cuts no other."""
-        mine = [r for p, r in boxes + legends if p in group]
+    def frame(group, boxes):
+        """The Q-Link group's frame: around its controls, and around any other it would cut (with an even gap)."""
+        mine = [r for p, r in boxes if p in group]
         if not mine:
             return None
         x0, y0 = min(r[0] for r in mine), min(r[1] for r in mine)
         x1, y1 = max(r[0] + r[2] for r in mine), max(r[1] + r[3] for r in mine)
-
-        def cuts(a, b, c, d):
-            for _pid, r in boxes:
+        grown = True
+        while grown:
+            grown = False
+            for _p, r in boxes:
+                a, b, c, d = x0 - 6, y0 - 6, x1 + 6, y1 + 6
                 ix = min(c, r[0] + r[2]) - max(a, r[0])
                 iy = min(d, r[1] + r[3]) - max(b, r[1])
                 inside = r[0] >= a and r[1] >= b and r[0] + r[2] <= c and r[1] + r[3] <= d
                 if ix > 0 and iy > 0 and not inside:
-                    return r
-            return None
-        while True:
-            r = cuts(x0, y0, x1, y1)
-            if r is None:
-                break
-            x0, y0, x1, y1 = min(x0, r[0]), min(y0, r[1]), max(x1, r[0] + r[2]), max(y1, r[1] + r[3])
-        for pad in (6, 5, 4, 3, 2, 1, 0):
-            a, b, c, d = max(0, x0 - pad), max(0, y0 - pad), min(1280, x1 + pad), min(628, y1 + pad)
-            if cuts(a, b, c, d) is None:
-                return (a, b, c - a, d - b)
-        return (x0, y0, x1 - x0, y1 - y0)
+                    x0, y0, x1, y1 = min(x0, r[0]), min(y0, r[1]), max(x1, r[0] + r[2]), max(y1, r[1] + r[3])
+                    grown = True
+        a, b = max(0, x0 - 6), max(0, y0 - 6)
+        return (a, b, min(1280, x1 + 6) - a, min(628, y1 + 6) - b)
 
     tabs, qmaps = [], []
     for page in m["pages"]:
-        kids, boxes, legends = tab_children(page)
-        knobs = [[c["id"] for c in page["controls"] if c["kind"] == "knob" and c["band"] == band] for band in (0, 1)]
-        groups = [knobs[0][0:4], knobs[0][4:8], knobs[1][0:4], knobs[1][4:8]]
+        kids, boxes = tab_children(page)
+        rows = [[None] * 4 for _ in range(4)]
+        for c in page["controls"]:
+            if c.get("q", -1) >= 0 and c["kind"] == "knob":
+                rows[c["q"] // 4][c["q"] % 4] = c["id"]
         rects, q = [], {}
-        for row, ids_ in enumerate(groups):
-            if not ids_:
+        for row, ids_ in enumerate(rows):
+            got = [x for x in ids_ if x]
+            if not got:
                 continue
-            r = frame(ids_, boxes, legends)
+            r = frame(got, boxes)
             if r:
                 rects.append(r)
             for col, pid in enumerate(ids_):
-                q[13 + col - 4 * row] = mpc(pid)
-        key, sub = page["key"], page["sub"]
-        tabs.append(O(("version", 1), ("tabName", "%s %d" % (page["name"], sub + 1)), ("fnKeyIndex", key),
-                      ("fnKeySubIndex", sub), ("componentDefinition", component([], kids)),
+                if pid:
+                    q[13 + col - 4 * row] = mpc(pid)
+        key = page["key"]
+        tabs.append(O(("version", 1), ("tabName", page["name"]), ("fnKeyIndex", key),
+                      ("fnKeySubIndex", 0), ("componentDefinition", component([], kids)),
                       ("qlinkBoundsData", [box(r) for r in rects])))
-        qmaps.append(O(("Tab", key + 1), ("SubTab", sub + 1), ("Bank Direction", "RowTopDown"),
+        qmaps.append(O(("Tab", key + 1), ("SubTab", 1), ("Bank Direction", "RowTopDown"),
                        ("Q-Links", O(*[("Q-Link %d" % n, q.get(n, -1)) for n in range(1, 17)]))))
 
     repl = [O(("key", "Parameter %d" % k), ("value", v)) for k, v in sorted(names.items())]

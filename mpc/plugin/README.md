@@ -22,21 +22,30 @@ denselben Ordner; jedes Gerät lädt seine eigene Datei darin.
 
 ## Die Seiten
 
-Sechs Funktionstasten mit je zwei Seiten: **einmal drücken die erste, nochmal drücken die zweite** (unten links steht,
-welche gerade zu sehen ist).
+Vier Funktionstasten, vier Seiten, jede ein Teil des Peak-Panels (wie im VST):
 
-| Taste | Seite 1 | Seite 2 |
-| --- | --- | --- |
-| **OSC** | Oszillator 1 und 2 (Range, Wave, Coarse, Fine, Pitch-Mod, Shape, WaveMore, Bend, Fixed Note) | Oszillator 3; VSync, SawDense, DenseDet aller drei |
-| **FILTER** | Mixer (Pegel, VCA Gain, Noise-Filter, Post Drive); Filter (Frequenz, Resonanz, Overdrive, Hüllkurven, LFO 1, Osc 3, Shape, Slope) | Voice (Modus, Unison, Spread, Pan, Patch Level, Glide); Diverge, Drift, Key Sync; **8/16 Stimmen, Qualität** |
-| **ENV** | Amp-Hüllkurve, Mod-Hüllkurve 1 (mit Delay, Hold, Velocity, Repeats) | Mod-Hüllkurve 2; ANIMATE 1 und 2 (gedrückt halten), HOLD |
-| **LFO** | LFO 1 und 2 | LFO 3 und 4; Arpeggiator |
-| **MOD** | Mod-Matrix Slot 1-8 (Quelle A, Quelle B, Ziel, Tiefe) | Slot 9-16 |
-| **FX** | Distortion, Chorus, Delay | Reverb; Wet/Dry, Routing, Bypass |
+| Taste | Seite |
+| --- | --- |
+| **OSC** | Oszillator 1 bis 3 und der Mixer |
+| **FILTER** | Filter, Distortion, Chorus, Delay, Effects (Bypass), Reverb |
+| **ENV** | Arp, LFO 1 und 2, Glide, Amp-Hüllkurve, Mod-Hüllkurven (Select 1/2) |
+| **SCREEN** | Master, Animate, Patch und das Menü mit dem Display |
 
-Ein Knopf wird mit dem Finger hoch und runter gezogen oder mit seinem Q-Link gedreht; zweimal tippen öffnet den
-großen Regler der MPC (bei einer Auswahl die Liste). Ein Taster schaltet um, eine LED-Liste wählt aus. Die Q-Links
-liegen auf jeder Seite auf den Reglern mit Rahmen (die oberen zwei Reihen der Q-Links = obere Hälfte der Seite).
+Ein Knopf oder Fader wird mit dem Finger gezogen oder mit seinem Q-Link gedreht; zweimal tippen öffnet den großen
+Regler der MPC (bei einer Auswahl die Liste). Die Tasten unter den LEDs schalten weiter wie am Peak, die LEDs selbst
+kann man auch direkt antippen. Wie im VST zeigt ein Knopf den gewählten Parameter: SHAPE AMOUNT die Quelle (Manual,
+Mod Env 1, LFO 1), ENV DEPTH Amp Env oder Mod Env 1, die LFO-RATE bei SYNC die Teilung, die Delay-TIME bei SYNC die
+Teilung, die MOD ENVELOPES die mit SELECT gewählte.
+
+**SCREEN**: Die Menütasten (Patch, Osc, Env, LFO, Arp/Clock, Mod, Voice, FX, Settings) öffnen dieselben Display-Seiten
+wie am VST, PAGE ◄ ► blättert. Eine Zeilentaste links wählt die Zeile; dann ändern der Datenknopf und VALUE − / + ihren
+Wert. Auf der PATCH-Seite: der Werks-Patch, **8/16 Stimmen** und die **Qualität**. Der Patch-Knopf und PATCH − / +
+wechseln den Werks-Patch, INITIALISE setzt den Init-Patch, AUDITION spielt ein C, solange man drückt. (COMPARE und
+SAVE haben auf der MPC keine Aufgabe: die MPC speichert ihre Programme selbst. Die Active-Voices-LEDs bleiben aus.)
+
+Die Q-Links: jede Reihe der 16 Q-Links liegt auf vier Reglern der Seite (mit Rahmen). OSC: je ein Oszillator (Coarse,
+Fine, Mod Env 2, LFO 2), unten der Mixer; FILTER: Filter, Filter-Modulation, Distortion/Chorus/Delay, Delay/Reverb;
+ENV: Amp-Hüllkurve, Mod-Hüllkurve 1, die LFOs, Arp Gate und Glide.
 
 Im **Program-Modus** (ohne Plugin-Seite) machen die Q-Links: 13-16 Frequenz, Resonanz, Overdrive, Filter-Hüllkurve;
 9-12 Mod-Hüllkurve 1; 5-8 Amp-Hüllkurve; 1-4 Chorus-, Delay-, Reverb-Pegel, Lautstärke.

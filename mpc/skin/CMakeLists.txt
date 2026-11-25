@@ -29,10 +29,11 @@ juce_add_binary_data(PeekSkinData SOURCES
     ${R}/fonts/FiraSans-ExtraBold.ttf
     ${R}/fonts/AnonymousPro-Bold.ttf
     ${R}/res/swtdr34mz-tag.png)
-target_sources(peek_skin_render PRIVATE render_skin.cpp ${R}/src/ui/Look.cpp ${R}/dsp/Params.cpp)
+target_sources(peek_skin_render PRIVATE render_skin.cpp ${R}/src/PluginProcessor.cpp ${R}/src/PluginEditor.cpp ${R}/src/ui/Look.cpp
+    ${R}/dsp/Engine.cpp ${R}/dsp/Params.cpp ${R}/dsp/Presets.cpp ${R}/dsp/Wavetables.cpp ${R}/dsp/Blep.cpp)
 target_include_directories(peek_skin_render PRIVATE ${R}/dsp ${R}/src)
 target_compile_definitions(peek_skin_render PRIVATE
     JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_ALSA=0 JUCE_JACK=0 JUCE_DISPLAY_SPLASH_SCREEN=0 JUCE_REPORT_APP_USAGE=0
     JUCE_USE_XRANDR=0 JUCE_USE_XINERAMA=0 JUCE_USE_XSHM=0 JUCE_USE_XRENDER=0 JUCE_USE_XCURSOR=0
-    JUCE_MODAL_LOOPS_PERMITTED=0)
+    JUCE_MODAL_LOOPS_PERMITTED=0 JUCE_STANDALONE_APPLICATION=1 JucePlugin_Build_Standalone=0)
 target_link_libraries(peek_skin_render PRIVATE PeekSkinData juce::juce_audio_utils juce::juce_recommended_config_flags)

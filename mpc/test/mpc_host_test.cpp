@@ -247,7 +247,7 @@ int main(int argc, char **argv)
     std::printf("  %s by %s, %d parameters, %d programs\n", p.str(effGetEffectName).c_str(), p.str(effGetVendorString).c_str(),
                 p.e->numParams, p.e->numPrograms);
     check(p.str(effGetEffectName) == "PEEK" && p.str(effGetVendorString) == "swtdr34mz", "names as in plugin.json");
-    check(p.e->numParams == 281, "281 parameters (their order permanent)");
+    check(p.e->numParams == 290, "290 parameters (their order permanent)");
 
     p.d(effSetSampleRate, 0, 0, nullptr, 44100.0f);
     p.d(effSetBlockSize, 0, 512);
@@ -335,6 +335,32 @@ int main(int argc, char **argv)
             same &= std::fabs(p.e->getParameter(p.e, i) - before[i]) < 1e-6f;
         auto s = render(p, 44100 * 2, {{100, 0x90, 60, 100}, {44100, 0x80, 60, 0}}, {256});
         check(same && rms(s, 4410, 44100) > 1e-3, "state saved and restored (" + std::to_string(saved.size()) + " bytes)");
+    }
+
+    /* the SCREEN page's keys: VALUE + steps the row picked, PATCH + loads the next patch, INITIALISE the Init Patch */
+    {
+        p.d(effSetProgram, 0, 0);
+        render(p, 2048, {}, {256});
+        p.e->setParameter(p.e, 281, 0.0f);                 /* the row: the patch's first parameter (MPC 1) */
+        p.e->setParameter(p.e, 1, 0.0f);
+        render(p, 512, {}, {256});
+        auto press = [&](int i) {
+            p.e->setParameter(p.e, i, 1.0f);
+            render(p, 512, {}, {256});
+            p.e->setParameter(p.e, i, 0.0f);
+            render(p, 512, {}, {256});
+        };
+        press(283);
+        press(283);
+        bool up = p.e->getParameter(p.e, 1) > 0.0f;
+        float before = p.e->getParameter(p.e, 286);
+        press(288);
+        bool next = p.e->getParameter(p.e, 286) > before;
+        std::string name = p.str(effGetParamDisplay, 286);
+        press(284);
+        auto s = render(p, 44100, {{100, 0x90, 60, 100}, {30000, 0x80, 60, 0}}, {256});
+        check(up && next && !name.empty() && finite(s) && rms(s, 0, 30000) > 1e-4,
+              "VALUE +, PATCH + (" + name + "), INITIALISE");
     }
 
     /* a storm */
