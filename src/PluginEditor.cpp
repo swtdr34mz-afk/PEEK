@@ -18,6 +18,19 @@ float Y(float py) { return (py - 95.0f) * 1.833f; }
 juce::Point<float> at(float px, float py) { return {X(px), Y(py)}; }
 juce::Rectangle<float> R(float x0, float y0, float x1, float y1) { return {X(x0), Y(y0), X(x1) - X(x0), Y(y1) - Y(y0)}; }
 
+/* a right click: the host's own menu for the parameter (MIDI learn, automation, ...); it never changes the value */
+bool hostMenu(juce::Component &c, const juce::MouseEvent &e, juce::RangedAudioParameter *p)
+{
+    if (!e.mods.isPopupMenu())
+        return false;
+    if (p)
+        if (auto *ed = c.findParentComponentOfClass<juce::AudioProcessorEditor>())
+            if (auto *host = ed->getHostContext())
+                if (auto menu = host->getContextMenuForParameter(p))
+                    menu->showNativeMenu(ed->getMouseXYRelative());
+    return true;
+}
+
 /* ------------------------------------------------------------------------------- a knob --- */
 class Knob : public juce::Component, public Panel::Live
 {
@@ -62,6 +75,9 @@ public:
     }
     void mouseDown(const juce::MouseEvent &e) override
     {
+        popup = hostMenu(*this, e, endless ? nullptr : target());
+        if (popup)
+            return;
         startY = e.position.y;
         acc = 0.0f;
         if (endless)
@@ -78,6 +94,8 @@ public:
     }
     void mouseDrag(const juce::MouseEvent &e) override
     {
+        if (popup || e.mods.isPopupMenu())
+            return;
         float dy = startY - e.position.y;
         bool fine = e.mods.isShiftDown();
         if (endless) {
@@ -105,6 +123,10 @@ public:
     }
     void mouseUp(const juce::MouseEvent &) override
     {
+        if (popup) {
+            popup = false;
+            return;
+        }
         if (!endless)
             if (auto *p = target())
                 p->endChangeGesture();
@@ -148,7 +170,7 @@ private:
     Target target;
     std::function<void(juce::RangedAudioParameter *)> onTouch;
     std::function<void(int)> onTurn;
-    bool endless = false, bipolar = false, bodyBipolar = false, big = false;
+    bool endless = false, bipolar = false, bodyBipolar = false, big = false, popup = false;
     float shownPos = -1.0f, startY = 0.0f, acc = 0.0f, turned = 0.0f, bodyScale = 0.0f;
     juce::Image body;
     int startV = 0;
@@ -176,6 +198,9 @@ public:
     }
     void mouseDown(const juce::MouseEvent &e) override
     {
+        popup = hostMenu(*this, e, target());
+        if (popup)
+            return;
         if (auto *p = target()) {
             p->beginChangeGesture();
             startPos = p->getValue();
@@ -192,6 +217,8 @@ public:
     }
     void mouseDrag(const juce::MouseEvent &e) override
     {
+        if (popup || e.mods.isPopupMenu())       /* (a right drag: nothing) */
+            return;
         if (auto *p = target()) {
             float span = (float)getHeight() - 16.0f;
             p->setValueNotifyingHost(juce::jlimit(0.0f, 1.0f, startPos + (startY - e.position.y) / span * (e.mods.isShiftDown() ? 0.25f : 1.0f)));
@@ -201,6 +228,10 @@ public:
     }
     void mouseUp(const juce::MouseEvent &) override
     {
+        if (popup) {
+            popup = false;
+            return;
+        }
         if (auto *p = target())
             p->endChangeGesture();
     }
@@ -220,6 +251,7 @@ private:
     Knob::Target target;
     std::function<void(juce::RangedAudioParameter *)> onTouch;
     float shownPos = -1.0f, startPos = 0.0f, startY = 0.0f;
+    bool popup = false;
 };
 
 /* ------------------------------------------------------------------------------ a button --- */
@@ -263,8 +295,11 @@ public:
             repaint();
         }
     }
-    void mouseDown(const juce::MouseEvent &) override
+    void mouseDown(const juce::MouseEvent &e) override
     {
+        popup = hostMenu(*this, e, param ? param() : nullptr);
+        if (popup)
+            return;
         down = true;
         repaint();
         if (onPress)
@@ -273,19 +308,24 @@ public:
     }
     void mouseUp(const juce::MouseEvent &) override
     {
+        if (popup) {
+            popup = false;
+            return;
+        }
         down = false;
         repaint();
         if (onRelease)
             onRelease();
     }
     juce::String text;                           /* (written on the cap: the animate buttons' numbers) */
+    Knob::Target param;                          /* (its parameter, if it has one: for the host's menu) */
 
 private:
     BtnStyle style;
     std::function<void()> onPress;
     std::function<bool()> isOn;
     std::function<void()> onRelease;
-    bool lit = false, down = false;
+    bool lit = false, down = false, popup = false;
     juce::Image cache[8];
     float cacheScale = 0.0f;
 };
@@ -331,7 +371,7 @@ public:
     }
     void mouseDown(const juce::MouseEvent &e) override
     {
-        if (!pick)
+        if (hostMenu(*this, e, param ? param() : nullptr) || !pick)
             return;
         float best = 1e9f;
         int bi = 0;
@@ -342,6 +382,8 @@ public:
             }
         pick(bi);
     }
+
+    Knob::Target param;                          /* (its parameter, if it has one: for the host's menu) */
 
 private:
     std::vector<juce::Point<float>> c;
@@ -434,6 +476,23 @@ public:
     }
     void mouseDown(const juce::MouseEvent &e) override
     {
+        if (e.mods.isPopupMenu()) {          /* (a right click: the host's menu for what the row or the display shows) */
+            juce::RangedAudioParameter *q = nullptr;
+            if (panel.showingTouch())
+                q = panel.shownGlobal ? panel.shownGlobal : panel.shown >= 0 ? panel.proc.param(panel.shown) : nullptr;
+            else {
+                auto pg = panel.page();
+                for (int i = 0; i < (int)rowsAt.size() && i < (int)pg.rows.size(); i++)
+                    if (rowsAt[(size_t)i].contains(e.position)) {
+                        if (pg.mod && i == 0)
+                            q = panel.proc.param(pg.modBase + (e.position.x > (float)getWidth() * 0.5f ? MOD_SB : MOD_SA));
+                        else if (pg.rows[(size_t)i].param >= 0)
+                            q = panel.proc.param(pg.rows[(size_t)i].param);
+                    }
+            }
+            hostMenu(*this, e, q);
+            return;
+        }
         if (panel.showingTouch()) {
             panel.shown = -1;
             panel.shownGlobal = nullptr;
@@ -913,25 +972,35 @@ void Panel::build()
         place(k, px, py, size, size);
         return k;
     };
+    int lastP = -1;                      /* (the parameter cycle, toggle or setTo were last made for: the next key's or LEDs') */
     auto button = [&](float px, float py, BtnStyle s, std::function<void()> press, std::function<bool()> on, float w = 52.0f,
                       float h = 26.0f) {
         auto *b = add<Btn>(s, std::move(press), std::move(on));
         place(b, px, py, w, h);
+        if (lastP >= 0)
+            b->param = P(lastP);
+        lastP = -1;
         return b;
     };
     auto leds = [&](std::vector<juce::Point<float>> pts, std::function<float(int)> lv, std::function<void(int)> pick = {}) {
         std::vector<juce::Point<float>> q;
         for (auto &p : pts)
             q.push_back(at(p.x, p.y));
-        return add<Leds>(q, 21.0f, std::move(lv), std::move(pick));
+        auto *l = add<Leds>(q, 21.0f, std::move(lv), std::move(pick));
+        if (lastP >= 0)
+            l->param = P(lastP);
+        lastP = -1;
+        return l;
     };
-    auto cycle = [this](int p, int n) {
+    auto cycle = [this, &lastP](int p, int n) {
+        lastP = p;
         return [this, p, n] {
             proc.setValue(p, (proc.value(p) + 1) % n);
             touch(p);
         };
     };
-    auto toggle = [this](int p) {
+    auto toggle = [this, &lastP](int p) {
+        lastP = p;
         return [this, p] {
             proc.setValue(p, proc.value(p) ? 0 : 1);
             touch(p);
@@ -939,7 +1008,10 @@ void Panel::build()
     };
     auto isOn = [this](int p) { return [this, p] { return proc.value(p) != 0; }; };
     auto is = [this](int p, int v) { return [this, p, v](int i) { return proc.value(p) == v + i ? 1.0f : 0.0f; }; };
-    auto setTo = [this](int p, int base = 0) { return [this, p, base](int i) { proc.setValue(p, base + i); touch(p); }; };
+    auto setTo = [this, &lastP](int p, int base = 0) {
+        lastP = p;
+        return [this, p, base](int i) { proc.setValue(p, base + i); touch(p); };
+    };
     auto glob = [this](const char *id) { return proc.apvts.getParameter(id); };
 
     /* MASTER */
@@ -1052,12 +1124,13 @@ void Panel::build()
         /* WAVE: sine, square / triangle, more / sawtooth */
         leds({{216, 326 + oy}, {241, 326 + oy}, {216, 338 + oy}, {241, 338 + oy}, {216, 350 + oy}},
              [this, b](int i) { static const int M[5] = {W_SINE, W_SQUARE, W_TRI, W_MORE, W_SAW}; return proc.value(b + OSC_WAVE) == M[i] ? 1.0f : 0.0f; },
-             [this, b](int i) { static const int M[5] = {W_SINE, W_SQUARE, W_TRI, W_MORE, W_SAW}; proc.setValue(b + OSC_WAVE, M[i]); touch(b + OSC_WAVE); });
+             [this, b](int i) { static const int M[5] = {W_SINE, W_SQUARE, W_TRI, W_MORE, W_SAW}; proc.setValue(b + OSC_WAVE, M[i]); touch(b + OSC_WAVE); })
+            ->param = P(b + OSC_WAVE);
         button(230, 366 + oy, BtnStyle::rubber, [this, b] {
             static const int NEXT[NWAVE] = {W_TRI, W_SAW, W_SQUARE, W_MORE, W_SINE};
             proc.setValue(b + OSC_WAVE, NEXT[proc.value(b + OSC_WAVE)]);
             touch(proc.value(b + OSC_WAVE) == W_MORE ? b + OSC_MORE : b + OSC_WAVE);
-        }, [] { return false; });
+        }, [] { return false; })->param = P(b + OSC_WAVE);
         knob(277, 343 + oy, b + OSC_ENV2);
         knob(333, 343 + oy, b + OSC_LFO2);
         dknob(389, 343 + oy, [this, b]() -> juce::RangedAudioParameter * {
@@ -1120,14 +1193,14 @@ void Panel::build()
         int s = proc.value(P_RV_SIZE);
         int t = s < 32 ? 0 : s < 96 ? 1 : 2;
         return t == i ? 1.0f : 0.0f;
-    }, [this](int i) { proc.setValue(P_RV_SIZE, i == 0 ? 0 : i == 1 ? 64 : 127); touch(P_RV_SIZE); });
+    }, [this](int i) { proc.setValue(P_RV_SIZE, i == 0 ? 0 : i == 1 ? 64 : 127); touch(P_RV_SIZE); })->param = P(P_RV_SIZE);
     button(872, 528, BtnStyle::rubber, [this] {
         int s = proc.value(P_RV_SIZE);
         int t = s < 32 ? 0 : s < 96 ? 1 : 2;
         t = (t + 1) % 3;
         proc.setValue(P_RV_SIZE, t == 0 ? 0 : t == 1 ? 64 : 127);
         touch(P_RV_SIZE);
-    }, [] { return false; });
+    }, [] { return false; })->param = P(P_RV_SIZE);
     knob(930, 500, P_RV_LEVEL);
 
     /* PEEK's own, in the top strip: the voices (8 or 16), HOST SYNC */
@@ -1138,7 +1211,7 @@ void Panel::build()
             q->setValueNotifyingHost(q->getValue() > 0.5f ? 0.0f : 1.0f);
             q->endChangeGesture();
             touchGlobal(q);
-        }, [] { return false; }, 40, 18);
+        }, [] { return false; }, 40, 18)->param = [glob] { return glob("voices"); };
         leds({{582, 556}, {582, 566}}, [this](int i) { return (proc.apvts.getRawParameterValue("voices")->load() > 0.5f) == (i == 1) ? 1.0f : 0.0f; },
              [this, glob](int i) {
                  auto *q = glob("voices");
@@ -1146,14 +1219,14 @@ void Panel::build()
                  q->setValueNotifyingHost(i ? 1.0f : 0.0f);
                  q->endChangeGesture();
                  touchGlobal(q);
-             });
+             })->param = [glob] { return glob("voices"); };
         button(640, 561, BtnStyle::rubber, [this, glob] {
             auto *q = glob("host_sync");
             q->beginChangeGesture();
             q->setValueNotifyingHost(q->getValue() > 0.5f ? 0.0f : 1.0f);
             q->endChangeGesture();
             touchGlobal(q);
-        }, [this] { return proc.apvts.getRawParameterValue("host_sync")->load() > 0.5f; }, 40, 18);
+        }, [this] { return proc.apvts.getRawParameterValue("host_sync")->load() > 0.5f; }, 40, 18)->param = [glob] { return glob("host_sync"); };
     }
     /* the active voices: two rows of four (16 voices: each LED two voices, both lit as one) */
     {

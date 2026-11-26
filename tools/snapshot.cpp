@@ -55,6 +55,33 @@ int main(int argc, char **argv)
                 auto b = k->getBounds();
                 std::printf("C %d %d %d %d %s\n", b.getX(), b.getY(), b.getRight(), b.getBottom(), typeid(*k).name());
             }
+    if (std::getenv("PEEK_RCLICK")) {             /* (a right click and a right drag on every control: no value changes) */
+        if (auto *panel = ed->getChildComponent(0)) {
+            juce::MemoryBlock before, after;
+            proc.getStateInformation(before);
+            auto src = juce::Desktop::getInstance().getMainMouseSource();
+            int n = 0;
+            bool left = juce::String(std::getenv("PEEK_RCLICK")) == "left";
+            for (auto *k : panel->getChildren()) {
+                if (left && n > 0)
+                    break;                       /* (the check: the first control, VOLUME, dragged with the left button) */
+                auto c = k->getLocalBounds().getCentre().toFloat();
+                auto now = juce::Time::getCurrentTime();
+                juce::ModifierKeys right(juce::String(std::getenv("PEEK_RCLICK")) == "left" ? juce::ModifierKeys::leftButtonModifier : juce::ModifierKeys::rightButtonModifier);   /* ("left": the check that it would see a change) */
+                juce::MouseEvent down(src, c, right, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, k, k, now, c, now, 1, false);
+                juce::MouseEvent drag(src, c.translated(0.0f, -60.0f), right, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, k, k, now, c, now, 1, false);
+                k->mouseDown(down);
+                k->mouseDrag(drag);
+                k->mouseUp(drag);
+                n++;
+            }
+            proc.getStateInformation(after);
+            bool same = before == after;
+            std::printf("right click on %d controls: %s\n", n, same ? "nothing changed" : "A VALUE CHANGED");
+            if (!same)
+                return 1;
+        }
+    }
     auto img = ed->createComponentSnapshot(ed->getLocalBounds(), true, scale);
     juce::File f = juce::File::getCurrentWorkingDirectory().getChildFile(out);
     f.deleteFile();
