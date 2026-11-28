@@ -4,6 +4,9 @@ The newest first. To release a new version: raise the number in VERSION and put 
 "## <the new number>". After the merge into main the release is made by itself (auto-release.yml), the
 downloads are built into it, and the website and the Discord post follow.
 
+## 1.1.1
+Smoother filter: turning the cutoff no longer steps. The cutoff knob's 256 steps (half a semitone each) now glide into one another, and modulation of the cutoff from the mod matrix moves smoothly too - no stair-step sound when you sweep the filter, also with high resonance. (Also in the MPC version.)
+
 ## 1.1.0
 Sharing sounds made easy: the SAVE window has two new buttons.
 - **Folder** opens the folder with your own patches in Explorer, Finder or the file manager.

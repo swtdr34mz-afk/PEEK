@@ -6,6 +6,7 @@
  * voices, the CPU. A failure exits non-zero. */
 #include "Engine.h"
 #include "Presets.h"
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -148,6 +149,35 @@ int main()
         double hz = zc / 2.0 / 0.5, want = 20.0 * std::pow(2.0, 150.0 * 10.2 / 255.0);
         std::printf("  self-oscillation at %.0f Hz (wanted %.0f)\n", hz, want);
         CHECK(std::fabs(std::log2(hz / want)) < 0.08, "self-oscillation at %.0f Hz, not %.0f", hz, want);
+        e.noteOff(60);
+    }
+    /* the cutoff knob turned slowly, one of its 256 steps every 40 ms: the singing filter glides, no steps heard */
+    {
+        Patch p;
+        patchInit(p);
+        p.v[P_LVL1] = 0;
+        p.v[P_RESO] = 255;
+        p.v[P_FREQ] = 120;
+        e.panic();
+        e.setPatch(p);
+        e.noteOn(60, 0.8f);
+        const int n = 44100 * 3;
+        std::vector<float> L((size_t)n), R((size_t)n);
+        int f = 120;
+        for (int at = 0; at < n; at += 64) {
+            if (at > 44100 && at % 1792 == 0 && f < 150)
+                e.setParam(P_FREQ, ++f);
+            e.render(&L[(size_t)at], &R[(size_t)at], std::min(64, n - at));
+        }
+        std::vector<double> zc;
+        for (int i = 44100; i < n; i++)
+            if (L[(size_t)i - 1] < 0.0f && L[(size_t)i] >= 0.0f)
+                zc.push_back(i - 1 + L[(size_t)i - 1] / (L[(size_t)i - 1] - L[(size_t)i]));
+        double worst = 0.0;
+        for (size_t k = 2; k < zc.size(); k++)
+            worst = std::fmax(worst, std::fabs(1200.0 * std::log2((zc[k - 1] - zc[k - 2]) / (zc[k] - zc[k - 1]))));
+        std::printf("  cutoff turned step by step: the largest jump between periods %.1f cents\n", worst);
+        CHECK(worst < 12.0, "the cutoff steps: a jump of %.1f cents", worst);
         e.noteOff(60);
     }
     /* every voice mode, unison sizes, 8 and 16 voices */
