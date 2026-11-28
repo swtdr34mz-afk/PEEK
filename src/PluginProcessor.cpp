@@ -97,7 +97,7 @@ void PeekProcessor::applyPatch(const Patch &p)
 
 void PeekProcessor::setCurrentProgram(int index)
 {
-    if (index < 0 || index >= getNumPrograms())
+    if (index < 0 || index >= programCount())
         return;
     program = index;
     compare = false;
@@ -109,7 +109,7 @@ const juce::String PeekProcessor::getProgramName(int index)
 {
     if (index >= 0 && index < NFACTORY)
         return juce::String(FACTORY[index].name);
-    if (index >= NFACTORY && index < getNumPrograms())
+    if (index >= NFACTORY && index < programCount())
         return juce::String(userPatches[(size_t)(index - NFACTORY)].name);
     return {};
 }
