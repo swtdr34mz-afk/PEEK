@@ -2,6 +2,7 @@
  * Copyright (C) 2026 swtdr34mz (PEEK) */
 #include "PluginEditor.h"
 #include "PanelDialog.h"
+#include "PatchFolderIO.h"
 #include "WindowSize.h"
 #include "ui/PixelFont.h"
 
@@ -953,10 +954,13 @@ void Panel::saveDialog()
     w->addTextEditor("name", proc.patchName(), "Name");
     w->addButton("Save", 1, juce::KeyPress(juce::KeyPress::returnKey));
     w->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
+    pfio::addButtons(*w);   /* Folder, Import... */
     juce::Component::SafePointer<Panel> self(this);
     dialog = w;
     pdlg::showInside(*this, w);
     w->enterModalState(true, juce::ModalCallbackFunction::create([self, w](int r) {
+                           if (self && pfio::handle(r, *self, PeekProcessor::patchFolder(), ".peek", "patch", [self] { if (self) { self->proc.rescanUser(); self->repaint(); } }))
+                               return;
                            if (self && r == 1)
                                pdlg::checked(self->proc.savePatch(w->getTextEditorContents("name")), *self);
                        }),
