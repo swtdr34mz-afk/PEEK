@@ -727,6 +727,7 @@ int main(int argc, char **argv)
         std::fprintf(stderr, "no panel\n");
         return 1;
     }
+    panel->zoomIcons = false;             /* (the VST's section zoom: no magnifiers on the MPC) */
     auto scr = screens(*panel);
     std::vector<Page> pages = {oscPage(), filterPage(), envPage(), screenPage(*panel, scr)};
 

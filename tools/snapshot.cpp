@@ -40,6 +40,13 @@ int main(int argc, char **argv)
     }
     std::unique_ptr<juce::AudioProcessorEditor> ed(proc.createEditor());
     ed->setSize(PeekPanel::W, PeekPanel::H);
+    if (auto *w = std::getenv("PEEK_W")) {       /* (a window of this width, e.g. a laptop's) */
+        int wd = juce::String(w).getIntValue();
+        ed->setSize(wd, (int)std::lround(wd * (double)PeekPanel::H / PeekPanel::W));
+    }
+    if (auto *z = std::getenv("PEEK_ZOOM"))     /* (a section shown large: its index) */
+        if (auto *pe = dynamic_cast<PeekEditor *>(ed.get()))
+            pe->zoomTo(juce::String(z).getIntValue());
     if (argc > 4)
         if (auto *panel = dynamic_cast<PeekPanel *>(ed->getChildComponent(0))) {
             panel->menu = (PeekPanel::Menu)std::atoi(argv[4]);
