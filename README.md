@@ -35,6 +35,8 @@ Die Plugins laufen auf Apple Silicon und Intel-Macs (eine Datei für beide).
 
 **MPC:** siehe [mpc/plugin/README.md](mpc/plugin/README.md).
 
+**Linux (Bitwig, Reaper, Ardour, ...):** Die `.tar.gz` entpacken. `PEEK.vst3` nach `~/.vst3/` kopieren, `PEEK.lv2` nach `~/.lv2/`. Die App `PEEK` startet auch ohne DAW. 64 Bit, gebaut auf Ubuntu 22.04.
+
 ## What it has
 
 - **8 or 16 voices** (VOICES, in the panel's bottom strip); POLY, POLY2, MONO, MONOLG, MONO2; UNISON of 1, 2, 3, 4
