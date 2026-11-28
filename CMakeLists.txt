@@ -36,11 +36,15 @@ endif()
 if(APPLE)
     list(APPEND PEEK_FORMATS AU)
 endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    list(APPEND PEEK_FORMATS LV2)
+endif()
 
 juce_add_plugin(Peek
     PRODUCT_NAME "PEEK"
     COMPANY_NAME "swtdr34mz"
     BUNDLE_ID "com.swtdr34mz.peek"
+    LV2URI "https://github.com/swtdr34mz-afk/PEEK"
     PLUGIN_MANUFACTURER_CODE Swtd
     PLUGIN_CODE Peek
     FORMATS ${PEEK_FORMATS}
