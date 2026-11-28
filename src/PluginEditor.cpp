@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 swtdr34mz (PEEK) */
 #include "PluginEditor.h"
+#include "PanelDialog.h"
+#include "WindowSize.h"
 #include "ui/PixelFont.h"
 
 using namespace pkui;
@@ -936,9 +938,10 @@ void Panel::saveDialog()
     w->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
     juce::Component::SafePointer<Panel> self(this);
     dialog = w;
+    pdlg::showInside(*this, w);
     w->enterModalState(true, juce::ModalCallbackFunction::create([self, w](int r) {
                            if (self && r == 1)
-                               self->proc.savePatch(w->getTextEditorContents("name"));
+                               pdlg::checked(self->proc.savePatch(w->getTextEditorContents("name")), *self);
                        }),
                        true);
 }
@@ -1510,11 +1513,16 @@ PeekEditor::PeekEditor(PeekProcessor &p) : AudioProcessorEditor(&p), proc(p), pa
         area = d->userArea;
     double fit = juce::jmin((area.getWidth() - 40) / W, (area.getHeight() - 90) / H);
     fit = juce::jlimit(0.45, 1.6, fit);
+    /* the size it was left at, read before the limits below resize the empty window (that resize would otherwise
+     * overwrite it with the smallest size); a new instance: the size last used anywhere */
+    const double keptScale = (double)proc.uiScale.load();
+    const bool keptSet = proc.uiScaleSet;
     setResizable(true, true);
     setResizeLimits((int)(W * 0.45), (int)(H * 0.45), (int)(W * juce::jmax(0.5, fit)), (int)(H * juce::jmax(0.5, fit)));
     getConstrainer()->setFixedAspectRatio(W / H);
-    double s = proc.uiScaleSet ? (double)proc.uiScale.load() : juce::jmin(fit, 1.0);
+    double s = keptSet ? keptScale : winsize::last("PEEK", juce::jmin(fit, 1.0));
     s = juce::jlimit(0.45, fit, s);
+    sized = true;
     setSize((int)std::lround(W * s), (int)std::lround(H * s));
 }
 
@@ -1522,6 +1530,9 @@ void PeekEditor::resized()
 {
     float s = (float)getWidth() / (float)PeekPanel::W;
     panel.setTransform(juce::AffineTransform::scale(s));
+    if (!sized)
+        return;
     proc.uiScale = s;
     proc.uiScaleSet = true;
+    winsize::remember("PEEK", (double)s);
 }
