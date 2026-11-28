@@ -99,6 +99,7 @@ private:
         float emph = 0.0f, deemph = 0.0f;
         HalfBand h1, h2;
         float sm[12] = {};
+        float cutK = 0.0f, cutM = 0.0f;          /* the cutoff: the knob's part (glides), the matrix's (ramped) */
         bool smOk = false;
         float fade = 1.0f;                       /* taken: out quickly, then the pending note */
         bool pend = false;

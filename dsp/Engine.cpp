@@ -847,7 +847,10 @@ void Engine::voiceChunk(Voice &v, float *Lo, float *Ro)
     float panPos = clampf(v.pan * (float)P[P_UNISPREAD] / 127.0f + ((float)P[P_PAN] + d[D_PAN]) / 64.0f, -1.0f, 1.0f);
     tgt[10] = panPos;
     tgt[11] = clampf(d[D_VCALEVEL], -1.0f, 1.0f);
+    const float cutTgtK = (float)P[P_FREQ], cutTgtM = d[D_FILTFREQ];
     if (!v.smOk) {
+        v.cutK = cutTgtK;
+        v.cutM = cutTgtM;
         for (int i = 0; i < 12; i++)
             v.sm[i] = tgt[i];
         v.smOk = true;
@@ -869,7 +872,9 @@ void Engine::voiceChunk(Voice &v, float *Lo, float *Ro)
     /* the filter: what doesn't move within the chunk */
     const int fshape = P[P_FSHAPE];
     const bool f24 = P[P_SLOPE] != 0;
-    float cutBase = (float)P[P_FREQ] + d[D_FILTFREQ];          /* 0..255: ten octaves and a bit from 20 Hz */
+    /* the cutoff (0..255: ten octaves and a bit from 20 Hz): the knob's 256 steps (half a semitone each) glide into
+       one another (about 20 ms), the matrix's part ramps across the chunk; no steps heard when it is turned */
+    const float kCut = 1.0f - std::exp(-1.0f / (0.02f * sr)), mStep = (cutTgtM - v.cutM) * (1.0f / (float)CH);
     float keyOct = (float)P[P_KEYTRK] / 127.0f * (v.pitch - 60.0f) / 12.0f;
     float fdiv = v.divF * (float)P[P_FDIVERGE] / 127.0f * 0.4f;
     float fenv1 = (float)P[P_FENV1] / 127.0f * 9.0f, fenva = (float)P[P_FENVA] / 127.0f * 9.0f;
@@ -892,6 +897,9 @@ void Engine::voiceChunk(Voice &v, float *Lo, float *Ro)
     for (int s = 0; s < CH; s++) {
         for (int i = 0; i < 12; i++)
             cur[i] += stp[i];
+        v.cutK += kCut * (cutTgtK - v.cutK);
+        v.cutM += mStep;
+        const float cutBase = v.cutK + v.cutM;
         /* the envelopes */
         for (int k = 0; k < 3; k++) {
             Env &e = v.e[k];
