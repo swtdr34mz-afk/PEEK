@@ -693,7 +693,7 @@ std::vector<Panel::Page> Panel::pages(Menu m) const
         Entry e;
         e.label = "Patch";
         e.lo = 0;
-        e.hi = proc.getNumPrograms() - 1;
+        e.hi = proc.programCount() - 1;
         e.get = [self] { return self->proc.getCurrentProgram(); };
         e.set = [self](int v) { self->proc.setCurrentProgram(v); };
         e.text = [](int v) { return v < NFACTORY ? "F" + juce::String(v + 1).paddedLeft('0', 3) : "U" + juce::String(v - NFACTORY + 1).paddedLeft('0', 3); };
@@ -922,7 +922,7 @@ void Panel::patchMenu(juce::Rectangle<int> screen)
     for (int i = 0; i < NFACTORY; i++)
         m.addItem(i + 1, "F" + juce::String(i + 1).paddedLeft('0', 3) + "   " + proc.getProgramName(i), true, i == proc.getCurrentProgram());
     m.addSectionHeader("YOUR PATCHES");
-    for (int i = NFACTORY; i < proc.getNumPrograms(); i++)
+    for (int i = NFACTORY; i < proc.programCount(); i++)
         m.addItem(i + 1, "U" + juce::String(i - NFACTORY + 1).paddedLeft('0', 3) + "   " + proc.getProgramName(i), true,
                   i == proc.getCurrentProgram());
     if (proc.userPatches.empty())
@@ -939,7 +939,7 @@ void Panel::patchMenu(juce::Rectangle<int> screen)
 
 void Panel::changePatch(int d)
 {
-    int n = proc.getNumPrograms();
+    int n = proc.programCount();
     proc.setCurrentProgram(((proc.getCurrentProgram() + d) % n + n) % n);
     shown = -1;
     shownGlobal = nullptr;
