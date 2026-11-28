@@ -70,6 +70,19 @@ public:
     std::vector<pk::Patch> userPatches;
     static juce::File patchFolder();
     void loadUserPatches();
+    /* the folder read again (after an import): the sound playing keeps its number */
+    void rescanUser()
+    {
+        auto cur = getProgramName(program);
+        loadUserPatches();
+        if (getProgramName(program) != cur)
+            for (int i = programCount(); --i >= 0;)
+                if (getProgramName(i) == cur) {
+                    program = i;
+                    break;
+                }
+        updateHostDisplay(ChangeDetails().withProgramChanged(true));
+    }
     int savePatch(const juce::String &name);
     pk::Patch currentPatch() const;             /* the sound as it is now, whole */
     bool compare = false;                       /* COMPARE: the stored patch heard, the edit kept aside */
