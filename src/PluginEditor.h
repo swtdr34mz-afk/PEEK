@@ -88,6 +88,7 @@ class PeekEditor : public juce::AudioProcessorEditor
 public:
     explicit PeekEditor(PeekProcessor &);
     void resized() override;
+    bool sized = false;                      /* (resizes during the constructor keep nothing) */
 
 private:
     PeekProcessor &proc;

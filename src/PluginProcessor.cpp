@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 swtdr34mz (PEEK) */
 #include "PluginProcessor.h"
+#include "PanelDialog.h"
 #include "PluginEditor.h"
 
 using namespace pk;
@@ -165,7 +166,7 @@ void PeekProcessor::initialise()
 
 juce::File PeekProcessor::patchFolder()
 {
-    return juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("PEEK").getChildFile("Patches");
+    return pdlg::docsOrAppData().getChildFile("PEEK").getChildFile("Patches");
 }
 
 void PeekProcessor::patchToXml(const Patch &p, juce::XmlElement &x)
