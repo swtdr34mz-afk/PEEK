@@ -47,7 +47,8 @@ void drawLed(juce::Graphics &, juce::Point<float> c, float w, float level);
 void drawSliderBack(juce::Graphics &, juce::Rectangle<float> r);
 void drawSliderCap(juce::Graphics &, juce::Rectangle<float> r, float pos);
 /* a section: its blue bar along the top and its name under it (left), the frame's hairline */
-void drawSection(juce::Graphics &, juce::Rectangle<float> r, const juce::String &title, bool arrow = false);
+void drawSection(juce::Graphics &, juce::Rectangle<float> r, const juce::String &title, bool arrow = false, bool zoom = false);
+juce::Rectangle<float> sectionTab(juce::Rectangle<float> r, const juce::String &title);   /* its name and magnifier (a click: zoom) */
 void drawLegend(juce::Graphics &, const juce::String &, juce::Rectangle<float>, float size = 12.0f,
                 juce::Justification j = juce::Justification::centred);
 void drawPanelFace(juce::Graphics &, juce::Rectangle<float> r, float sc);

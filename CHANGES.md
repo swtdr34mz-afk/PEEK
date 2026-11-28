@@ -4,6 +4,9 @@ The newest first. To release a new version: raise the number in VERSION and put 
 "## <the new number>". After the merge into main the release is made by itself (auto-release.yml), the
 downloads are built into it, and the website and the Discord post follow.
 
+## 1.0.9
+New: section zoom. Every section's name has a small magnifier - click the name and that section fills the window, sharp and fully playable, so knobs and labels are easy to read and hit on a small laptop screen. Click the X, next to the section or the name again to see the whole panel.
+
 ## 1.0.8
 New: PEEK for Linux - VST3, LV2 and a standalone app (64-bit, built on Ubuntu 22.04). Checked with pluginval like the Windows version.
 

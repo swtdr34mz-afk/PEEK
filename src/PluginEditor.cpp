@@ -600,6 +600,23 @@ Panel::PeekPanel(PeekProcessor &p) : proc(p)
 {
     setLookAndFeel(&look);
     setSize(W, H);
+    struct S {
+        float x0, y0, x1, y1;
+        const char *t;
+        bool arrow;
+    };
+    static const S SEC[] = {{48, 114, 110, 200, "MASTER", false},     {48, 203, 110, 303, "ANIMATE", false},
+                            {112, 114, 186, 303, "PATCH", false},     {188, 114, 460, 303, "MENU", false},
+                            {462, 114, 510, 303, "ARP", false},       {512, 114, 735, 200, "LFO 1", false},
+                            {737, 114, 957, 200, "LFO 2", false},     {512, 203, 570, 303, "GLIDE", false},
+                            {572, 203, 735, 303, "AMP ENVELOPE", false}, {737, 203, 957, 303, "MOD ENVELOPES", false},
+                            {48, 306, 460, 384, "OSCILLATOR 1", true}, {48, 386, 460, 464, "OSCILLATOR 2", true},
+                            {48, 466, 460, 545, "OSCILLATOR 3", true}, {462, 306, 570, 545, "MIXER", false},
+                            {572, 306, 735, 545, "FILTER", true},     {737, 306, 790, 384, "DISTORTION", false},
+                            {792, 306, 957, 384, "CHORUS", false},    {737, 386, 957, 464, "DELAY", false},
+                            {737, 466, 790, 545, "EFFECTS", false},   {792, 466, 957, 545, "REVERB", false}};
+    for (auto &x : SEC)
+        sections.push_back({R(x.x0, x.y0, x.x1, x.y1), x.t, x.arrow});
     build();
     startTimerHz(30);
 }
@@ -1290,23 +1307,8 @@ void Panel::paintBackground(juce::Graphics &g, float sc)
     small(R(651, 556, 690, 566), "HOST SYNC", Justification::centredLeft, 10.0f);
 
     /* the sections */
-    struct Sec {
-        float x0, y0, x1, y1;
-        const char *t;
-        bool arrow;
-    };
-    const Sec S[] = {{48, 114, 110, 200, "MASTER", false},     {48, 203, 110, 303, "ANIMATE", false},
-                     {112, 114, 186, 303, "PATCH", false},     {188, 114, 460, 303, "MENU", false},
-                     {462, 114, 510, 303, "ARP", false},       {512, 114, 735, 200, "LFO 1", false},
-                     {737, 114, 957, 200, "LFO 2", false},     {512, 203, 570, 303, "GLIDE", false},
-                     {572, 203, 735, 303, "AMP ENVELOPE", false}, {737, 203, 957, 303, "MOD ENVELOPES", false},
-                     {48, 306, 460, 384, "OSCILLATOR 1", true}, {48, 386, 460, 464, "OSCILLATOR 2", true},
-                     {48, 466, 460, 545, "OSCILLATOR 3", true}, {462, 306, 570, 545, "MIXER", false},
-                     {572, 306, 735, 545, "FILTER", true},     {737, 306, 790, 384, "DISTORTION", false},
-                     {792, 306, 957, 384, "CHORUS", false},    {737, 386, 957, 464, "DELAY", false},
-                     {737, 466, 790, 545, "EFFECTS", false},   {792, 466, 957, 545, "REVERB", false}};
-    for (auto &s : S)
-        drawSection(g, R(s.x0, s.y0, s.x1, s.y1), s.t, s.arrow);
+    for (auto &s : sections)
+        drawSection(g, s.r, s.title, s.arrow, zoomIcons);
     /* VCA GAIN's own box inside the mixer */
     {
         auto r = R(516, 306, 570, 377);
@@ -1475,7 +1477,7 @@ void Panel::paintBackground(juce::Graphics &g, float sc)
 void Panel::paint(juce::Graphics &g)
 {
     float sc = g.getInternalContext().getPhysicalPixelScaleFactor();
-    if (sc != backgroundScale || background.isNull()) {
+    if (background.isNull() || (sc != backgroundScale && zoomR.isEmpty())) {
         backgroundScale = sc;
         background = juce::Image(juce::Image::RGB, juce::jmax(1, (int)std::ceil(W * sc)), juce::jmax(1, (int)std::ceil(H * sc)), true);
         juce::Graphics bg(background);
@@ -1483,12 +1485,58 @@ void Panel::paint(juce::Graphics &g)
         paintBackground(bg, sc);
     }
     g.drawImage(background, getLocalBounds().toFloat(), juce::RectanglePlacement::stretchToFit);
+    /* zoomed in: the section shown from a picture of its own at the zoom's resolution (the whole panel at that size
+       would be far too large a picture) */
+    if (!zoomR.isEmpty() && sc > backgroundScale * 1.02f) {
+        if (zoomCache.isNull() || std::fabs(sc - zoomScale) > 0.02f) {
+            zoomScale = sc;
+            const float zsc = juce::jmin(sc, 10.0f);
+            zoomCache = juce::Image(juce::Image::RGB, juce::jmax(1, (int)std::ceil(zoomR.getWidth() * zsc)),
+                                    juce::jmax(1, (int)std::ceil(zoomR.getHeight() * zsc)), true);
+            juce::Graphics zg(zoomCache);
+            zg.addTransform(juce::AffineTransform::translation(-zoomR.getX(), -zoomR.getY()).scaled(zsc));
+            paintBackground(zg, zsc);
+        }
+        g.drawImage(zoomCache, zoomR, juce::RectanglePlacement::stretchToFit);
+    }
     /* the voices, in the bottom strip (8 or 16) */
     bool sixteen = proc.apvts.getRawParameterValue("voices")->load() > 0.5f;
     g.setFont(font(Face::title, 18.0f));
     g.setColour(col::legend);
     g.drawText(sixteen ? "SIXTEEN-VOICE POLYPHONIC SYNTHESISER" : "EIGHT-VOICE POLYPHONIC SYNTHESISER", R(700, 547, 955, 571),
                juce::Justification::centredRight, false);
+}
+
+int Panel::tabAt(juce::Point<float> p) const
+{
+    for (int i = 0; i < (int)sections.size(); i++)
+        if (pkui::sectionTab(sections[(size_t)i].r, sections[(size_t)i].title).contains(p))
+            return i;
+    return -1;
+}
+
+void Panel::setZoom(juce::Rectangle<float> r)
+{
+    if (r == zoomR)
+        return;
+    zoomR = r;
+    zoomCache = juce::Image();
+    zoomScale = 0.0f;
+    repaint();
+}
+
+void Panel::mouseDown(const juce::MouseEvent &e)
+{
+    if (e.mods.isPopupMenu())
+        return;
+    int i = tabAt(e.position);
+    if (i >= 0 && onSection)
+        onSection(i);
+}
+
+void Panel::mouseMove(const juce::MouseEvent &e)
+{
+    setMouseCursor(tabAt(e.position) >= 0 ? juce::MouseCursor::PointingHandCursor : juce::MouseCursor::NormalCursor);
 }
 
 void Panel::timerCallback()
@@ -1503,10 +1551,54 @@ void Panel::timerCallback()
 }
 
 /* ============================================================================== the editor === */
+/* the zoom's veil: the panel round the shown section darkened (a click there, or on the X, shows the whole panel
+   again); the section itself takes the clicks as ever */
+struct PeekEditor::Shade : juce::Component {
+    PeekEditor &ed;
+    juce::Rectangle<float> hole;         /* (the section, in the editor's coordinates) */
+    explicit Shade(PeekEditor &e) : ed(e) { setInterceptsMouseClicks(true, false); }
+    juce::Rectangle<float> closeBox() const
+    {
+        float d = juce::jlimit(26.0f, 40.0f, hole.getWidth() * 0.05f);
+        return {hole.getRight() - d * 0.55f, hole.getY() - d * 0.45f, d, d};
+    }
+    bool hitTest(int x, int y) override
+    {
+        juce::Point<float> p((float)x, (float)y);
+        return closeBox().contains(p) || !hole.contains(p);
+    }
+    void paint(juce::Graphics &g) override
+    {
+        juce::Path veil;
+        veil.addRectangle(getLocalBounds().toFloat());
+        veil.addRoundedRectangle(hole.expanded(3.0f), 4.0f);
+        veil.setUsingNonZeroWinding(false);
+        g.setColour(juce::Colours::black.withAlpha(0.72f));
+        g.fillPath(veil);
+        auto c = closeBox();             /* the X: a round button in the panel's blue */
+        g.setColour(juce::Colours::black.withAlpha(0.5f));
+        g.fillEllipse(c.translated(0.0f, 2.0f));
+        g.setColour(pkui::col::blue);
+        g.fillEllipse(c);
+        g.setColour(juce::Colours::white);
+        auto x = c.reduced(c.getWidth() * 0.32f);
+        g.drawLine({x.getTopLeft(), x.getBottomRight()}, 2.6f);
+        g.drawLine({x.getTopRight(), x.getBottomLeft()}, 2.6f);
+    }
+    void mouseDown(const juce::MouseEvent &) override { ed.zoomTo(-1); }
+    void mouseMove(const juce::MouseEvent &e) override
+    {
+        setMouseCursor(closeBox().contains(e.position) ? juce::MouseCursor::PointingHandCursor : juce::MouseCursor::NormalCursor);
+    }
+};
+
 PeekEditor::PeekEditor(PeekProcessor &p) : AudioProcessorEditor(&p), proc(p), panel(p)
 {
     addAndMakeVisible(panel);
     panel.setBounds(0, 0, PeekPanel::W, PeekPanel::H);
+    shade = std::make_unique<Shade>(*this);   /* (the section zoom's veil, hidden until a section is shown large) */
+    addChildComponent(*shade);
+    panel.onSection = [this](int i) { zoomTo(i); };
     const double W = PeekPanel::W, H = PeekPanel::H;
     auto area = juce::Rectangle<int>(0, 0, 1920, 1080);
     if (auto *d = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay())
@@ -1526,10 +1618,70 @@ PeekEditor::PeekEditor(PeekProcessor &p) : AudioProcessorEditor(&p), proc(p), pa
     setSize((int)std::lround(W * s), (int)std::lround(H * s));
 }
 
+PeekEditor::~PeekEditor() { anim.stopTimer(); }
+
+juce::AffineTransform PeekEditor::panelTransform(int section) const
+{
+    const float s = (float)getWidth() / (float)PeekPanel::W;
+    if (section < 0 || section >= (int)panel.sections.size())
+        return juce::AffineTransform::scale(s);
+    /* the section (and a margin) as large as the window allows, in its middle; at most 4 times the panel's size */
+    auto r = panel.sections[(size_t)section].r.expanded(14.0f);
+    float z = juce::jmin((float)getWidth() / r.getWidth(), (float)getHeight() / r.getHeight(), s * 4.0f);
+    float tx = ((float)getWidth() - r.getWidth() * z) * 0.5f - r.getX() * z;
+    float ty = ((float)getHeight() - r.getHeight() * z) * 0.5f - r.getY() * z;
+    return juce::AffineTransform::scale(z).translated(tx, ty);
+}
+
+void PeekEditor::zoomTo(int section)
+{
+    if (section == zoomed)
+        section = -1;                    /* (its name again: back) */
+    zoomed = section;
+    animFrom = panel.getTransform();
+    animTo = panelTransform(section);
+    animStart = juce::Time::getMillisecondCounterHiRes() - (isShowing() ? 0.0 : 1000.0);   /* (not on screen: at once) */
+    panel.setZoom({});
+    if (section >= 0) {
+        shade->setVisible(true);
+        shade->toFront(false);
+    }
+    anim.startTimerHz(60);
+    animate();
+}
+
+void PeekEditor::animate()
+{
+    double t = juce::jlimit(0.0, 1.0, (juce::Time::getMillisecondCounterHiRes() - animStart) / 220.0);
+    float e = (float)(1.0 - std::pow(1.0 - t, 3.0));   /* (eases out) */
+    auto lerp = [e](float a, float b) { return a + (b - a) * e; };
+    juce::AffineTransform m(lerp(animFrom.mat00, animTo.mat00), 0.0f, lerp(animFrom.mat02, animTo.mat02),
+                            0.0f, lerp(animFrom.mat11, animTo.mat11), lerp(animFrom.mat12, animTo.mat12));
+    panel.setTransform(m);
+    auto *sh = static_cast<Shade *>(shade.get());
+    if (zoomed >= 0) {
+        sh->hole = panel.sections[(size_t)zoomed].r.transformedBy(m);
+        sh->repaint();
+    }
+    if (t >= 1.0) {
+        anim.stopTimer();
+        if (zoomed >= 0)
+            panel.setZoom(panel.sections[(size_t)zoomed].r);
+        else
+            sh->setVisible(false);
+        panel.repaint();
+    }
+}
+
 void PeekEditor::resized()
 {
     float s = (float)getWidth() / (float)PeekPanel::W;
-    panel.setTransform(juce::AffineTransform::scale(s));
+    panel.setTransform(panelTransform(zoomed));
+    if (shade) {
+        shade->setBounds(getLocalBounds());
+        if (zoomed >= 0)
+            static_cast<Shade *>(shade.get())->hole = panel.sections[(size_t)zoomed].r.transformedBy(panel.getTransform());
+    }
     if (!sized)
         return;
     proc.uiScale = s;

@@ -242,7 +242,7 @@ void drawLegend(juce::Graphics &g, const juce::String &t, juce::Rectangle<float>
     g.drawFittedText(t, r.toNearestInt(), j, 2, 0.8f);
 }
 
-void drawSection(juce::Graphics &g, juce::Rectangle<float> r, const juce::String &title, bool arrow)
+void drawSection(juce::Graphics &g, juce::Rectangle<float> r, const juce::String &title, bool arrow, bool zoom)
 {
     using namespace juce;
     /* a slightly lighter field, a dark hairline round it */
@@ -262,7 +262,27 @@ void drawSection(juce::Graphics &g, juce::Rectangle<float> r, const juce::String
         g.setColour(col::blue);
         g.fillPath(p);
     }
+    if (zoom && title.isNotEmpty()) {   /* a small magnifier after the name: a click on either shows the section large */
+        auto t = sectionTab(r, title);
+        const Point<float> c(t.getRight() - 8.0f, t.getCentreY() - 1.0f);
+        g.setColour(col::legend.withAlpha(0.55f));
+        g.drawEllipse(Rectangle<float>(8.0f, 8.0f).withCentre(c), 1.5f);
+        g.drawLine(c.x + 2.9f, c.y + 2.9f, c.x + 5.6f, c.y + 5.6f, 2.0f);
+    }
 }
+
+juce::Rectangle<float> sectionTab(juce::Rectangle<float> r, const juce::String &title)
+{
+    using namespace juce;
+    GlyphArrangement ga;
+    ga.addLineOfText(font(Face::title, 17.0f), title, 0.0f, 0.0f);
+    float w = ga.getBoundingBox(0, -1, true).getWidth();
+    auto t = Rectangle<float>(r.getX() + 3.0f, r.getY() + 5.0f, w + 30.0f, 22.0f);
+    if (t.getRight() > r.getRight() - 2.0f)   /* (a narrow section: the magnifier in its corner, under the name) */
+        t = Rectangle<float>(r.getX() + 3.0f, r.getY() + 5.0f, r.getWidth() - 5.0f, 42.0f);
+    return t;
+}
+
 /* ---------------------------------------------------------------------------------- the coat --- */
 /* The panel's finish (SOLARIS-23's): a black textured powder coat on steel, a dense, even field of tiny round bumps,
  * each about a panel unit across and lit from the upper left (a bright crown, a dark foot), the pigment's own grain

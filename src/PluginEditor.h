@@ -63,6 +63,20 @@ public:
     juce::Component *oledView = nullptr;
     int shownVoices = 8;
 
+    /* the sections (the panel's own coordinates) and the section zoom: a click on a section's name or its magnifier */
+    struct Section {
+        juce::Rectangle<float> r;
+        juce::String title;
+        bool arrow;
+    };
+    std::vector<Section> sections;
+    bool zoomIcons = true;               /* (the magnifiers on the names; off for the MPC skin's pictures) */
+    std::function<void(int)> onSection;
+    int tabAt(juce::Point<float>) const;
+    void setZoom(juce::Rectangle<float> r);   /* the section shown large (empty: none): drawn sharp at its size */
+    void mouseDown(const juce::MouseEvent &) override;
+    void mouseMove(const juce::MouseEvent &) override;
+
     struct Live {
         virtual ~Live() = default;
         virtual void poll() = 0;
@@ -78,6 +92,9 @@ private:
     std::vector<Live *> live;
     juce::Image background;
     float backgroundScale = 0.0f;
+    juce::Rectangle<float> zoomR;        /* (zoomed: that part of the panel drawn again at the zoom's resolution) */
+    juce::Image zoomCache;
+    float zoomScale = 0.0f;
     juce::Component::SafePointer<juce::AlertWindow> dialog;
     template <class T, class... A> T *add(A &&...a);
     friend class Oled;
@@ -87,12 +104,27 @@ class PeekEditor : public juce::AudioProcessorEditor
 {
 public:
     explicit PeekEditor(PeekProcessor &);
+    ~PeekEditor() override;
     void resized() override;
     bool sized = false;                      /* (resizes during the constructor keep nothing) */
+    void zoomTo(int section);                /* the section zoom: a section as large as the window allows; -1: back */
+    int zoomedSection() const { return zoomed; }
 
 private:
+    juce::AffineTransform panelTransform(int section) const;
+    void animate();
     PeekProcessor &proc;
     juce::SharedResourcePointer<pkui::UiResources> resources;   // (before the panel: freed after it)
     PeekPanel panel;
+    int zoomed = -1;
+    juce::AffineTransform animFrom, animTo;
+    double animStart = 0.0;
+    struct Shade;
+    std::unique_ptr<juce::Component> shade;
+    struct Anim : juce::Timer {
+        PeekEditor &ed;
+        explicit Anim(PeekEditor &e) : ed(e) {}
+        void timerCallback() override { ed.animate(); }
+    } anim{*this};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PeekEditor)
 };
